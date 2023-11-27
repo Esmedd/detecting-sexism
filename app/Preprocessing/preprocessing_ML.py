@@ -75,16 +75,4 @@ def preprocessing(sentence, punctuation=True, stop_words=True, sent_tokenize=Fal
 
 
 
-
-# Basic cleaning
-
-  ##call arnaud cleaning
-
-    tokenized_sentence = word_tokenize(sentence) ## tokenize stop_words = set(stopwords.words('english')) ## define stopwords
-    #stop_words = set(stopwords.words('english'))
-    #tokenized_sentence_cleaned = [w for w in tokenized_sentence if not w in stop_words]
-    lemmatized = [WordNetLemmatizer().lemmatize(word) for word in tokenized_sentence]
-    cleaned_sentence = ' '.join(word for word in lemmatized)
-    return cleaned_sentence
-
-df['clean_text'] = df['title_comment'].apply(clean)
+#df['clean_text'] = df['title_comment'].apply(clean)
