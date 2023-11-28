@@ -4,28 +4,13 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk import word_tokenize, sent_tokenize
 
-import string
-import unidecode
+
 
 def tokenize_words(text): #tokenizes text to words
     return word_tokenize(text)
 
 def tokenize_sentences(text): #tokenizes text to sentences
     return sent_tokenize(text)
-
-def remove_punctuation(text): #remove punctuation
-    for punctuation in string.punctuation:
-        text = text.replace(punctuation,'')
-    return text
-
-def lower_case(text):   #turn into lower case
-    return text.lower()
-
-def remove_accents(text):
-    return unidecode.unidecode(text) # remove accents
-
-def remove_numbers(text):
-        words_only = [word for word in text if word.isalpha()] # Remove numbers
 
 def remove_stop_words(tokens): # remove stop words (english)
     stop_words = set(stopwords.words('english')) # Make stopword list
@@ -56,15 +41,15 @@ def lemmatize(tokens): # lemmatize text
 
 def preprocessing(sentence, punctuation=True, stop_words=True, sent_tokenize=False, lemmatize=False):
 
-    if not isinstance(sentence, str):   ### Check if the input is not a string
-        return ""
+    # if not isinstance(sentence, str):   ### Check if the input is not a string
+    #     return ""
 
-    sentence = lower_case(sentence)     ### lower case
-    sentence = remove_accents(sentence) ### remove accents
+    # sentence = lower_case(sentence)     ### lower case
+    # sentence = remove_accents(sentence) ### remove accents
 
-    if punctuation==True:               ### remove punctuation (if punctuation == True)
-        for punctuation in string.punctuation:
-            sentence = sentence.replace(punctuation, ' ')
+    # if punctuation==True:               ### remove punctuation (if punctuation == True)
+    #     for punctuation in string.punctuation:
+    #         sentence = sentence.replace(punctuation, ' ')
 
     if sent_tokenize==True:             ### tokenize rows to words or sentences
         tokenized = tokenize_sentences(sentence)
