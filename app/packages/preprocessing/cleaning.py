@@ -3,6 +3,7 @@ import emoji
 import re
 import string
 import unidecode
+from app.packages.utils import *
 
 class cleaning:
     def __init__(self, path):
@@ -10,6 +11,7 @@ class cleaning:
         self.data = pd.read_csv(path)
 
     # Drop duplicates from one selected column
+    @simple_time_and_memory_tracker
     def drop_duplicates_from_one_col(self, data, duplicate_cols: str):
         """Drop duplicates based on One column
         example """
@@ -19,6 +21,7 @@ class cleaning:
 
 
     # Construct Dataframe from selected columns and drop nan values
+    @simple_time_and_memory_tracker
     def drop_na(self,data, selected_columns: list = None):
         """Returns Df with selected columns and drop na"""
         if selected_columns == None:
@@ -30,22 +33,26 @@ class cleaning:
         return data
 
     # Remove Urls in text and replace them by "[URL]""
+    @simple_time_and_memory_tracker
     def urls_remover(self, data, target_column:str, label:str="[URL]"):
         data[target_column] = data[target_column].str.replace(r'\s*https?://\S+(\s+|$)',label, regex=True)
         data[target_column] = data[target_column].str.replace(r'\s*http?://\S+(\s+|$)',label,regex=True)
         return data
 
     # Remove Usernames in text and replace them by "[USERNAME]"
+    @simple_time_and_memory_tracker
     def username_remover(self, data, target_column:str, label:str="[USERNAME]"):
         data[target_column] = data[target_column].str.replace(r'\s*@\S+(\s+|$)',label, regex=True)
         return data
 
     # Replace Emojis in text and replace them by their descriptions wrapped in squared brackets
+    @simple_time_and_memory_tracker
     def emoji_replacer(self, data, target_column:str):
         data[target_column] = data[target_column].apply(lambda x:emoji.demojize(x, delimiters=("[", "]")) )
         return data
 
     # Replace Hashtags by the full word or by separating words at each uppercase letter
+    @simple_time_and_memory_tracker
     def hashtag_adapter(self,data:pd.DataFrame, target_column:str, concatenate:bool=True):
         """Will replace hashtags found in text by a method.
         >>> 'concatenate=False' will split the hashtags at each uppercase letter
@@ -61,6 +68,7 @@ class cleaning:
         else:
             raise ValueError("Wrong method")
 
+    @simple_time_and_memory_tracker
     def remove_punctuation(self,data:pd.DataFrame, text_col:str): #remove punctuation
         def remove_punct(text):
             for punctuation in string.punctuation:
@@ -70,18 +78,22 @@ class cleaning:
         data[text_col] = data[text_col].apply(lambda x: remove_punct(x))
         return data
 
+    @simple_time_and_memory_tracker
     def lower_case(self, data:pd.DataFrame, text_col:str):   #turn into lower case
         data[text_col] = data[text_col].apply(lambda x: x.lower())
         return data
 
+    @simple_time_and_memory_tracker
     def remove_accents(self,data:pd.DataFrame, text_col:str):
         data[text_col] = data[text_col].apply(lambda x: unidecode.unidecode(x))
         return data
 
+    @simple_time_and_memory_tracker
     def remove_numbers(self,data:pd.DataFrame, text_col:str):
         data[text_col] = data[text_col].apply(lambda x: "".join([word for word in x if word.isalpha()]))
         return data
 
+    @simple_time_and_memory_tracker
     def strip(self,data, dropna_cols: str):
         """Manage text columns with strip and splitting the text"""
         serie = data[dropna_cols].apply(lambda x: x.strip() if isinstance(x, str) else x)
