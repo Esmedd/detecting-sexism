@@ -27,7 +27,7 @@ class cleaning:
         data = data.dropna()
         return data
 
-    # Remove Usernames in text and replace them by "[URL]""
+    # Remove Urls in text and replace them by "[URL]""
     def urls_remover(self, data, target_column:str):
         data[target_column] = data[target_column].str.replace(r'\s*https?://\S+(\s+|$)','[URL]', regex=True)
         data[target_column] = data[target_column].str.replace(r'\s*http?://\S+(\s+|$)','[URL]',regex=True)
@@ -87,7 +87,7 @@ class cleaning:
         6th : hashtag_adapter()
         7th : strip()
 
-        example : clean.all_in_one(df.data,dropna_cols="text",split_cols="text",selected_cols=["text", "sexist_binary"])"""
+        example : clean.all_in_one(data=clean.data, text_col="text", selected_cols=["text", "sexist_binary"], method="splitted")"""
         data_dups = self.drop_duplicates_from_one_col(data, text_col)
         data_dropna = self.drop_na(data_dups,selected_cols)
         data_url = self.urls_remover(data_dropna,text_col)
