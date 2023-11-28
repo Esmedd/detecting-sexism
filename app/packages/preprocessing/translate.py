@@ -9,11 +9,14 @@ def translation(path, text_col:str, selected_cols:list = None,method:str="concat
     Will call Cleaning Class beforehand.
 
     -------- CLEANING PACKAGE --------
-        >>> 'selected_cols' columns to keep in the Dataframe
-        >>> 'text_col' text column to clean
+        >>> 'selected_cols' -> columns to keep in the Dataframe
+        >>> 'text_col' -> text column to clean
 
-        >>> 'method=splitted' will split the hashtags at each uppercase letter
-        >>> 'method=concat' will keep the hashtag intact
+        >>> 'concatenate=False' -> will split the hashtags at each uppercase letter
+        >>> 'concatenate=True' -> will keep the hashtag intact
+
+        >>> 'url_label' -> label to replace urls in text. Default : [URL]
+        >>> 'usr_label' -> label to replace usernames in text. Default : [USERNAME]
 
         1st : drop_duplicates_from_one_col()
         2nd : drop_na()
@@ -21,8 +24,11 @@ def translation(path, text_col:str, selected_cols:list = None,method:str="concat
         4th : username_remover()
         5th : emoji_replacer()
         6th : hashtag_adapter()
-        7th : strip()
-
+        7th : remove_punctuation
+        8th : lower_case
+        9th : remove_accents
+        10th : remove_punctuation
+        11th : strip()
         example : clean.all_in_one(data=clean.data, text_col="text", selected_cols=["text", "sexist_binary"], method="splitted")
     """
     clean = cleaning(path)
