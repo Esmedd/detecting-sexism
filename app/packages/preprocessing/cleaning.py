@@ -101,7 +101,10 @@ class cleaning:
         data[dropna_cols] = serie
         return data
 
-    def all_in_one(self, data : pd.DataFrame(), text_col: str, selected_cols:list = None, concatenate:bool=True, url_label:str="[URL]", usr_label:str="[USERNAME]"):
+    def all_in_one(self, data : pd.DataFrame(),
+                   text_col: str, selected_cols:list = None,
+                   concatenate:bool=True, url_label:str="[URL]",
+                   usr_label:str="[USERNAME]", func_to_exec:list=[True]*11):
         """ Does a sequence of the above functions :
         >>> 'selected_cols' -> columns to keep in the Dataframe
         >>> 'text_col' -> text column to clean
@@ -112,6 +115,8 @@ class cleaning:
         >>> 'url_label' -> label to replace urls in text. Default : [URL]
         >>> 'usr_label' -> label to replace usernames in text. Default : [USERNAME]
 
+        >>> 'func_to_exec' -> list of functions to use or not to use, accept boolean for each function
+        >>> example : '[True, True, True, False, False, True, True, True, True, False, False]
         1st : drop_duplicates_from_one_col()
         2nd : drop_na()
         3rd : urls_remover()
@@ -125,17 +130,28 @@ class cleaning:
         11th : strip()
 
         example : clean.all_in_one(data=clean.data, text_col="text", selected_cols=["text", "sexist_binary"], method="splitted")"""
-        data_dups = self.drop_duplicates_from_one_col(data, text_col)
-        data_dropna = self.drop_na(data_dups,selected_cols)
-        data_url = self.urls_remover(data_dropna,text_col, label=url_label)
-        data_usr = self.username_remover(data_url,text_col, label=usr_label)
-        data_emoji = self.emoji_replacer(data_usr,text_col)
-        data_hashtag = self.hashtag_adapter(data_emoji,text_col, concatenate)
-        data_punctuation = self.remove_punctuation(data_hashtag,text_col)
-        data_lower = self.lower_case(data_punctuation,text_col)
-        data_accent = self.remove_accents(data_lower,text_col)
-        data_number = self.remove_punctuation(data_accent,text_col)
-        data_strip = self.strip(data_number,text_col)
+        if func_to_exec[0] == True:
+            data = self.drop_duplicates_from_one_col(data, text_col)
+        if func_to_exec[1] == True:
+            data = self.drop_na(data,selected_cols)
+        if func_to_exec[2] == True:
+            data = self.urls_remover(data,text_col, label=url_label)
+        if func_to_exec[3] == True:
+            data= self.username_remover(data,text_col, label=usr_label)
+        if func_to_exec[4] == True:
+            data = self.emoji_replacer(data,text_col)
+        if func_to_exec[5] == True:
+            data = self.hashtag_adapter(data,text_col, concatenate)
+        if func_to_exec[6] == True:
+            data = self.remove_punctuation(data,text_col)
+        if func_to_exec[7] == True:
+            data = self.lower_case(data,text_col)
+        if func_to_exec[8] == True:
+            data = self.remove_accents(data,text_col)
+        if func_to_exec[9] == True:
+            data = self.remove_punctuation(data,text_col)
+        if func_to_exec[10] == True:
+            data = self.strip(data,text_col)
 
         print("✅ All in One is done")
-        return data_strip
+        return data
