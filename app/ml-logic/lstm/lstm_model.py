@@ -60,10 +60,10 @@ def train_lstm_model(
         model: Model,
         X: np.ndarray,
         y: np.ndarray,
-        batch_size=256,
-        patience=2,
+        batch_size=64,
+        patience=4,
         validation_data=None, # overrides validation_split
-        validation_split=0.3
+        validation_split=0.2
     ) -> Tuple[Model, dict]:
     """
     Fit the model and return a tuple (fitted_model, history)
@@ -81,7 +81,7 @@ def train_lstm_model(
         y,
         validation_data=validation_data,
         validation_split=validation_split,
-        epochs=???,
+        epochs=100,
         batch_size=batch_size,
         callbacks=[es],
         verbose=0
