@@ -29,7 +29,7 @@ def remove_numbers(text):
 
 def remove_stop_words(tokens): # remove stop words (english)
     stop_words = set(stopwords.words('english')) # Make stopword list
-    without_stopwords = [word for word in words_only if not word in stop_words] # Remove Stop Words
+    without_stopwords = [word for word in tokens if not word in stop_words] # Remove Stop Words
     return without_stopwords
 
 def lemmatize(tokens): # lemmatize text
@@ -42,38 +42,40 @@ def lemmatize(tokens): # lemmatize text
     #                   for word in noun_lemmatized]
     return verb_lemmatized
 
+
+##############################################################################################################
+###################### MAIN PREPROCESSING FUNCTION ##########################################################
+###############################################################################################################
+
+##### Preprocessing function. Optional parameters:
+# punctuation = True (removes punctuation),
+# stop_words = True (removes stop_words),
+# sent_tokenize = False (words are tokenized, not sentences)
+# lemmatize = False (sentences are not lemmatized)
+# EXMPAMPLE # data['text_clean'] = data['text'].apply(lambda x: preprocessing_ML.preprocessing(x, stop_words=False))
+
 def preprocessing(sentence, punctuation=True, stop_words=True, sent_tokenize=False, lemmatize=False):
 
-    ### lower case
-    sentence = lower_case(sentence)
+    if not isinstance(sentence, str):   ### Check if the input is not a string
+        return ""
 
-    ### remove accents
-    sentence = remove_accents(sentence)
+    sentence = lower_case(sentence)     ### lower case
+    sentence = remove_accents(sentence) ### remove accents
 
-    #### remove punctuation (if punctuation == True)
-    if punctuation==True:
+    if punctuation==True:               ### remove punctuation (if punctuation == True)
         for punctuation in string.punctuation:
             sentence = sentence.replace(punctuation, ' ')
 
-    ##### tokenize rows to words or sentences
-    if sent_tokenize==True:
+    if sent_tokenize==True:             ### tokenize rows to words or sentences
         tokenized = tokenize_sentences(sentence)
     else:
         tokenized = tokenize_words(sentence)
         tokenized = [word for word in tokenized if word.isalpha()] # Remove numbers
 
-    ##### remove stop words (if stop_words==True)
-    if stop_words==True:
+    if stop_words==True:                ### remove stop words (if stop_words==True)
         tokenized = remove_stop_words(tokenized)
 
-    #### lemmatize sentences
-    if lemmatize==True:
+    if lemmatize==True:                 ### lemmatize sentences
         tokenized = lemmatize(tokenized)
 
     return " ".join(tokenized)
-
-
-
-
-#df['clean_text'] = df['title_comment'].apply(clean)
-#test
