@@ -35,7 +35,7 @@ def lemmatizer(data:pd.DataFrame, text_col:str): # lemmatize text
     # adj_lemmatized = [WordNetLemmatizer().lemmatize(word, pos = 'a')
     #                   for word in noun_lemmatized]
 
-    df[text_col] = df[text_col].apply(lambda x: [lem.lemmatize(word, pos="v")for word in x])
+    df[text_col] = df[text_col].apply(lambda x: " ".join([lem.lemmatize(word, pos="v")for word in x]))
     return df
 
 
