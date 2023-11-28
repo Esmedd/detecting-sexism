@@ -5,6 +5,7 @@ import string
 import unidecode
 from app.packages.utils import *
 
+@simple_time_and_memory_tracker
 class cleaning:
     def __init__(self, path):
         """Create self.data from a path to a csv"""
