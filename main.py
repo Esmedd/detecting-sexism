@@ -1,7 +1,9 @@
 from app.packages.preprocessing.cleaning import *
 from app.packages.preprocessing.preprocessing_ML import *
 from app.packages.preprocessing.translate import *
+from app.ml_logic.multinomial.multinomial_model import *
 from sklearn.model_selection import train_test_split, cross_validate
+
 
 DB_URL = "data/raw_data/merged_df_en.csv"
 text_col = "text"
@@ -22,6 +24,8 @@ def main():
     X_train_preproc = preprocessing(X_train,text_col,False,False, True)
     X_test_preproc = preprocessing(X_test,text_col,False,False, True)
 
+    # Temporary Baseline Model
+    results = cv_multinomial_baseline_model(X_train_preproc[target], y_train)
 
 
 
