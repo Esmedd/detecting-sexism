@@ -1,4 +1,13 @@
+from app.packages.preprocessing.cleaning import *
+from app.packages.preprocessing.preprocessing_ML import *
+from app.packages.preprocessing.translate import *
 
+DB_URL = "data/raw_data/merged_df_en.csv"
+text_col = "text"
+
+def main():
+    clean = cleaning(DB_URL)
+    df = clean.all_in_one(clean.data,text_col)
 
 
 
