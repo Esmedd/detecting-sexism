@@ -1,24 +1,29 @@
 import pandas as pd
+from app.packages.utils import *
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk import word_tokenize, sent_tokenize
 
+@simple_time_and_memory_tracker
 def tokenize_words(data:pd.DataFrame, text_col:str): #tokenizes text to words
     df = data.copy()
     df[text_col] = df[text_col].apply(lambda x: word_tokenize(x))
     return df
 
+@simple_time_and_memory_tracker
 def tokenize_sentences(data:pd.DataFrame, text_col:str): #tokenizes text to sentences
     df = data.copy()
     df[text_col] = df[text_col].apply(lambda x: sent_tokenize(x))
     return df
 
+@simple_time_and_memory_tracker
 def remove_stop_words(data:pd.DataFrame, text_col:str): # remove stop words (english)
     df = data.copy()
     stop_words = set(stopwords.words('english')) # Make stopword list
     df[text_col] = df[text_col].apply(lambda x: [word for word in x if not word in stop_words])
     return df
 
+@simple_time_and_memory_tracker
 def lemmatizer(data:pd.DataFrame, text_col:str): # lemmatize text
     df = data.copy()
     lem = WordNetLemmatizer()

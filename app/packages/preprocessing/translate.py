@@ -1,7 +1,9 @@
 from googletrans import Translator, LANGUAGES, LANGCODES
 from app.packages.preprocessing.cleaning import *
+from app.packages.utils import *
 import numpy as np
 
+@simple_time_and_memory_tracker
 def translation(path, text_col:str, selected_cols:list = None,method:str="concat", dest:str="en" ):
     """Function to translate automatically a text column.
     >>> 'path' -> csv to translate
@@ -31,6 +33,7 @@ def translation(path, text_col:str, selected_cols:list = None,method:str="concat
     data[text_col] = data[text_col].apply(lambda x: translator.translate(x, dest=dest).text)
     return data
 
+@simple_time_and_memory_tracker
 def add_to_csv(dest_path:str, data: pd.DataFrame):
     """ Add the specified data to the csv mentionned in dest_path"""
 
