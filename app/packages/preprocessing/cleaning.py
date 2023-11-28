@@ -91,7 +91,7 @@ class cleaning:
 
     @simple_time_and_memory_tracker
     def remove_numbers(self,data:pd.DataFrame, text_col:str):
-        data[text_col] = data[text_col].apply(lambda x: "".join([word for word in x if word.isalpha()]))
+        data[text_col] = data[text_col].apply(lambda x: "".join([word for word in x if not word.isdigit()]))
         return data
 
     @simple_time_and_memory_tracker
