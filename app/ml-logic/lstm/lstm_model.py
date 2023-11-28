@@ -4,20 +4,20 @@ from gensim.models import Word2Vec
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import numpy as np
 
-def w2v_preprocessing(sentences, vector_size, window, dtype='float32', padding='post'):
+def w2v_preprocessing(X, vector_size, window, dtype='float32', padding='post'):
 
     """Returns a list of embedded, padded sentences (each sentence is a matrix).
-    Takes vectorizing arguments "vector_size" and "window
+    Takes vectorizing arguments "vector_size" and "window"
     Takes padding arguments dtype & padding
     """
 
-    word2vec = Word2Vec(sentences=sentences, vector_size=vector_size, window=window)
+    word2vec = Word2Vec(sentences=X, vector_size=vector_size, window=window)
 
     def embed_sentence(word2vec, sentence):
         wv = word2vec.wv
         return np.array([wv[i] for i in sentence if i in wv])
 
-    embedded = [embed_sentence(word2vec, s) for s in sentences]
+    embedded = [embed_sentence(word2vec, s) for s in X]
 
     return pad_sequences(embedded, dtype=dtype, padding=padding)
 
