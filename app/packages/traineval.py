@@ -1,8 +1,9 @@
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras import models, metrics, Model
 import numpy as np
+from app.packages.utils import *
 
-
+@simple_time_and_memory_tracker
 def train_model(
         model: Model,
         X: np.ndarray,
@@ -28,16 +29,17 @@ def train_model(
         y,
         validation_data=validation_data,
         validation_split=validation_split,
-        epochs=100,
+        epochs=50,
         batch_size=batch_size,
         callbacks=[es],
-        verbose=0
+        verbose=1
     )
 
     print(f"✅ Model trained on {len(X)} rows with max val accuracy: {round(np.min(history.history['val_accuracy']), 2)}, max val recall: {round(np.min(history.history['val_recall']), 2)}")
 
     return model, history
 
+@simple_time_and_memory_tracker
 def evaluate_model(
         model: Model,
         X: np.ndarray,
