@@ -34,6 +34,14 @@ def preprocess():
     clean = cleaning(DB_URL)
     df = clean.all_in_one(clean.data,text_col,selected_col,concatenate,url_label, usr_label)
 
+    load_data_to_bq(
+    data_processed,
+    gcp_project=GCP_PROJECT,
+    bq_dataset=BQ_DATASET,
+    table=f'df_cleaned',
+    truncate=True
+    )
+
     # Split X and y and preprocess X
     X = df.drop(target, axis=1)
     y = df[[target]]
