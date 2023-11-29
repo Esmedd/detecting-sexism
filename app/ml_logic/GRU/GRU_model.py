@@ -97,7 +97,7 @@ def evaluate_gru_model(model, X, y, batch_size=64) -> Tuple:
 
 
 ##### PRELIMINARY RESULTS:
-# {'loss': 0.5017110705375671,
-#  'accuracy': 0.7493237257003784,
-#  'precision': 0.7381215691566467,
-#  'recall': 0.5932504534721375}
+# {'loss': 0.49656569957733154,
+#  'accuracy': 0.7549143433570862,
+#  'precision': 0.7103155851364136,
+#  'recall': 0.6696270108222961}
