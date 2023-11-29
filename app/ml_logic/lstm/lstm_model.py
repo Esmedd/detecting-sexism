@@ -96,7 +96,7 @@ def train_lstm_model(
     """
     Fit the model and return a tuple (fitted_model, history)
     """
-    print(Fore.BLUE + "\nTraining model..." + Style.RESET_ALL)
+    print("\nTraining model...")
 
     es = EarlyStopping(
         patience=patience,
