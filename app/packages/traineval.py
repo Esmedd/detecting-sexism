@@ -11,7 +11,7 @@ def train_model(
         patience=4,
         validation_data=None, # overrides validation_split
         validation_split=0.2
-    ) -> Tuple[Model, dict]:
+    ):
     """
     Fit the model and return a tuple (fitted_model, history)
     """
@@ -43,7 +43,7 @@ def evaluate_model(
         X: np.ndarray,
         y: np.ndarray,
         batch_size=64
-    ) -> Tuple[Model, dict]:
+    ):
     """
     Evaluate trained model performance on the dataset
     """
