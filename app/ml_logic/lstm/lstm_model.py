@@ -56,7 +56,7 @@ def compile_lstm_model(model: Model, loss='binary_crossentropy', optimizer='rmsp
     return model
 
 
-def train_lstm_model(
+def train_model(
         model: Model,
         X: np.ndarray,
         y: np.ndarray,
@@ -91,7 +91,7 @@ def train_lstm_model(
 
     return model, history
 
-def evaluate_lstm_model(
+def evaluate_model(
         model: Model,
         X: np.ndarray,
         y: np.ndarray,
