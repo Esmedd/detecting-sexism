@@ -2,9 +2,8 @@ import glob
 import os
 import time
 import pickle
-
-
 from tensorflow import keras
+from keras import models, Model
 from google.cloud import storage
 from params import *
 
@@ -43,7 +42,7 @@ def save_results(params: dict, metrics: dict) -> None:
     print("✅ Results saved locally")
 
 
-def save_model(model: keras.Model = None) -> None:
+def save_model(model_name:str, model: Model = None) -> None:
     """
     Persist trained model locally on the hard drive at f"{LOCAL_REGISTRY_PATH}/models/{timestamp}.h5"
     - if MODEL_TARGET='gcs', also persist it in your bucket on GCS at "models/{timestamp}.h5" --> unit 02 only
@@ -58,32 +57,16 @@ def save_model(model: keras.Model = None) -> None:
 
     print("✅ Model saved locally")
 
-    if MODEL_TARGET == "gcs":
-        # 🎁 We give you this piece of code as a gift. Please read it carefully! Add a breakpoint if needed!
-
-        model_filename = model_path.split("/")[-1] # e.g. "20230208-161047.h5" for instance
-        client = storage.Client()
-        bucket = client.bucket(BUCKET_NAME)
-        blob = bucket.blob(f"models/{model_filename}")
-        blob.upload_from_filename(model_path)
-
-        print("✅ Model saved to GCS")
-
-        return None
-
     if MODEL_TARGET == "mlflow":
         mlflow.tensorflow.log_model(model=model,
                         artifact_path="model",
-                        registered_model_name=MLFLOW_MODEL_NAME
+                        registered_model_name=f"{MLFLOW_MODEL_NAME}_{model_name}"
                         )
         print("✅ Model saved to mlflow")
-
-
-
     return None
 
 
-def load_model(stage="Production") -> keras.Model:
+def load_model(model_name:str, stage="Production") -> Model:
     """
     Return a saved model:
     - locally (latest one in alphabetical order)
@@ -108,33 +91,11 @@ def load_model(stage="Production") -> keras.Model:
 
         print(f"\nLoad latest model from disk...")
 
-        latest_model = keras.models.load_model(most_recent_model_path_on_disk)
+        latest_model = models.load_model(most_recent_model_path_on_disk)
 
         print("✅ Model loaded from local disk")
 
         return latest_model
-
-    elif MODEL_TARGET == "gcs":
-        # 🎁 We give you this piece of code as a gift. Please read it carefully! Add a breakpoint if needed!
-        print(f"\nLoad latest model from GCS...")
-
-        client = storage.Client()
-        blobs = list(client.get_bucket(BUCKET_NAME).list_blobs(prefix="model"))
-
-        try:
-            latest_blob = max(blobs, key=lambda x: x.updated)
-            latest_model_path_to_save = os.path.join(LOCAL_REGISTRY_PATH, latest_blob.name)
-            latest_blob.download_to_filename(latest_model_path_to_save)
-
-            latest_model = keras.models.load_model(latest_model_path_to_save)
-
-            print("✅ Latest model downloaded from cloud storage")
-
-            return latest_model
-        except:
-            print(f"\n❌ No model found in GCS bucket {BUCKET_NAME}")
-
-            return None
 
     elif MODEL_TARGET == "mlflow":
         print(f"\nLoad [{stage}] model from MLflow...")
@@ -142,11 +103,11 @@ def load_model(stage="Production") -> keras.Model:
         # mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
         client = MlflowClient()
         try:
-            model_versions = client.get_latest_versions(name=MLFLOW_MODEL_NAME, stages=[stage])
+            model_versions = client.get_latest_versions(name=f"{MLFLOW_MODEL_NAME}_{model_name}", stages=[stage])
             model_uri = model_versions[0].source
             assert model_uri is not None
         except:
-            print(f"\n❌ No model found with name {MLFLOW_MODEL_NAME} in stage {stage}")
+            print(f"\n❌ No model found with name {MLFLOW_MODEL_NAME}_{model_name} in stage {stage}")
             return None
 
         model = mlflow.tensorflow.load_model(model_uri=model_uri)
@@ -158,7 +119,7 @@ def load_model(stage="Production") -> keras.Model:
 
 
 
-def mlflow_transition_model(current_stage: str, new_stage: str) -> None:
+def mlflow_transition_model(model_name:str, current_stage: str, new_stage: str) -> None:
     """
     Transition the latest model from the `current_stage` to the
     `new_stage` and archive the existing model in `new_stage`
@@ -167,20 +128,20 @@ def mlflow_transition_model(current_stage: str, new_stage: str) -> None:
 
     client = MlflowClient()
 
-    version = client.get_latest_versions(name=MLFLOW_MODEL_NAME, stages=[current_stage])
+    version = client.get_latest_versions(name=f"{MLFLOW_MODEL_NAME}_{model_name}", stages=[current_stage])
 
     if not version:
-        print(f"\n❌ No model found with name {MLFLOW_MODEL_NAME} in stage {current_stage}")
+        print(f"\n❌ No model found with name {MLFLOW_MODEL_NAME}_{model_name} in stage {current_stage}")
         return None
 
     client.transition_model_version_stage(
-        name=MLFLOW_MODEL_NAME,
+        name=f"{MLFLOW_MODEL_NAME}_{model_name}",
         version=version[0].version,
         stage=new_stage,
         archive_existing_versions=True
     )
 
-    print(f"✅ Model {MLFLOW_MODEL_NAME} (version {version[0].version}) transitioned from {current_stage} to {new_stage}")
+    print(f"✅ Model {MLFLOW_MODEL_NAME}_{model_name} (version {version[0].version}) transitioned from {current_stage} to {new_stage}")
 
     return None
 

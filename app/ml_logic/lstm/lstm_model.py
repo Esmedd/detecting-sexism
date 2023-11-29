@@ -6,8 +6,26 @@ from tensorflow import keras
 from keras.utils import pad_sequences
 from colorama import Fore, Style
 from app.packages.utils import *
+from keras.preprocessing.text import text_to_word_sequence
+from keras import Model, Sequential, regularizers, optimizers
+from keras.callbacks import EarlyStopping
+from keras.layers import *
+from keras import metrics
 
 import numpy as np
+
+def tokenize(df_column, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n', lower=True, split=' '):
+    """ tokenize a column
+    df_column (pandas.Series): The DataFrame column containing text.
+    filters: The set of characters to filter out. defaults to remove punctuation.
+    lower: Whether to convert the text to lowercase. defaults to true.
+    split: The split to use for splitting the text. Defaults to ' ' (space).
+
+    Returns:
+    list of lists: list where each element is a list of tokens from a row in the input column.
+    """
+    return df_column.astype(str).apply(lambda x: text_to_word_sequence(x, filters=filters, lower=lower, split=split)).tolist()
+
 
 def w2v_train_and_embed(X_train, vector_size, window, dtype='float32', padding='post'):
 
@@ -52,11 +70,7 @@ def embed_preprocessing():
 
 ## 06-Deep-Learning/04-RNN-and-NLP/data-your-first-embedding/Your-first-embedding.ipynb
 
-from tensorflow import keras
-from keras import Model, Sequential, regularizers, optimizers
-from keras.callbacks import EarlyStopping
-from keras.layers import *
-from keras import metrics
+
 
 def initialize_lstm(lstm_units=50, lstm_activation='tanh'):
 
@@ -89,7 +103,7 @@ def train_lstm_model(
         X: np.ndarray,
         y: np.ndarray,
         batch_size=64,
-        patience=4,
+        patience=2,
         validation_data=None, # overrides validation_split
         validation_split=0.2
     ) -> Tuple[Model, dict]:
