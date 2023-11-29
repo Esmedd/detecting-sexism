@@ -1,6 +1,6 @@
 from app.packages.preprocessing.cleaning import *
 import numpy as np
-import pandas as pd
+importpandas as pd
 
 from tensorflow.keras.preprocessing.text import text_to_word_sequence, Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
