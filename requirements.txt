@@ -30,7 +30,7 @@ scikit-learn==1.3.2
 scipy==1.11.4
 seaborn==0.13.0
 
-
+direnv
 Unidecode==1.3.7
 
 uvicorn
