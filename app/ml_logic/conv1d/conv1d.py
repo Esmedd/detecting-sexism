@@ -1,18 +1,18 @@
 from app.packages.preprocessing.cleaning import *
 import numpy as np
 import pandas as pd
-
+from app.packages.utils import *
 from tensorflow.keras.preprocessing.text import text_to_word_sequence, Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras import layers, Sequential, models, metrics
 from tensorflow.keras.layers import Embedding, Conv1D, GlobalMaxPooling1D, Dense, Dropout
 
+@simple_time_and_memory_tracker
 def c1d_preproc(X, maxlen=100):
     """ Preprocess X data for a Conv1D model
     Takes a single column df, X, as input. Returns the preprocessed X,
     the maxlen and the vocab size as output for use in initialize model function
     """
-    X_text = X.to_numpy()
     X_word = [text_to_word_sequence(x) for x in X_text]
 
     tk = Tokenizer()
@@ -23,6 +23,7 @@ def c1d_preproc(X, maxlen=100):
     X_token_pad = pad_sequences(X_token, dtype=float, padding='post', maxlen=maxlen)
     return X_token_pad, vocab_size, maxlen
 
+@simple_time_and_memory_tracker
 def intialize_c1d(vocab_size, maxlen, embedding_size=100, loss='binary_crossentropy', optimizer='adam'):
     """Initialize and compile a Conv1D model
     Takes a vocab_size and maxlen ouputted by preproc, as well as embedding size

@@ -1,8 +1,9 @@
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras import models, metrics, Model
 import numpy as np
+from app.packages.utils import *
 
-
+@simple_time_and_memory_tracker
 def train_model(
         model: Model,
         X: np.ndarray,
@@ -38,6 +39,7 @@ def train_model(
 
     return model, history
 
+@simple_time_and_memory_tracker
 def evaluate_model(
         model: Model,
         X: np.ndarray,
