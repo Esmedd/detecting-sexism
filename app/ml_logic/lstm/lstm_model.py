@@ -1,25 +1,49 @@
 ## Vectorizing/Embedding - Word2Vec
 
 from gensim.models import Word2Vec
-from tensorflow.keras.preprocessing.sequence import pad_sequences
+from typing import Tuple
+from tensorflow import keras
+from keras.utils import pad_sequences
+from colorama import Fore, Style
+from app.packages.utils import *
+
 import numpy as np
 
-def w2v_preprocessing(X, vector_size, window, dtype='float32', padding='post'):
+def w2v_train_and_embed(X_train, vector_size, window, dtype='float32', padding='post'):
 
     """Returns a list of embedded, padded sentences (each sentence is a matrix).
     Takes vectorizing arguments "vector_size" and "window"
     Takes padding arguments dtype & padding
     """
 
-    word2vec = Word2Vec(sentences=X, vector_size=vector_size, window=window)
+    word2vec = Word2Vec(sentences=X_train, vector_size=vector_size, window=window)
 
-    def embed_sentence(word2vec, sentence):
-        wv = word2vec.wv
+    def embed_sentence(wv, sentence):
         return np.array([wv[i] for i in sentence if i in wv])
 
-    embedded = [embed_sentence(word2vec, s) for s in X]
+    wv = word2vec.wv
 
-    return pad_sequences(embedded, dtype=dtype, padding=padding)
+    embedded = [embed_sentence(wv, s) for s in X_train]
+
+    return pad_sequences(embedded, dtype=dtype, padding=padding), word2vec
+
+def w2v_embed(X_test, word2vec_model, max_length, dtype='float32', padding='post'):
+    """
+    Embed sentences using a trained Word2Vec model.
+    """
+    def embed_sentence(wv, sentence):
+        return np.array([wv[i] for i in sentence if i in wv])
+
+    # Embedding the sentences
+    wv = word2vec_model.wv
+    embedded_X = [embed_sentence(wv, s) for s in X_test]
+
+    return pad_sequences(embedded_X, maxlen=max_length, dtype=dtype, padding=padding)
+
+#########EXAMPLES#############
+#X_train_padded, trained_word2vec_model = train_and_embed_word2vec(X_train, vector_size=50, window=5)
+#X_test_padded = embed_word2vec(X_test, trained_word2vec_model, max_length=len(X_train_padded[0]))
+
 
 def embed_preprocessing():
     pass
@@ -29,16 +53,20 @@ def embed_preprocessing():
 ## 06-Deep-Learning/04-RNN-and-NLP/data-your-first-embedding/Your-first-embedding.ipynb
 
 from tensorflow import keras
-from keras import Model, Sequential, layers, regularizers, optimizers, LSTM, Masking
+from keras import Model, Sequential, regularizers, optimizers
 from keras.callbacks import EarlyStopping
+from keras.layers import *
 from keras import metrics
 
-def initialize_lstm(lstm_units=20, lstm_activation='tanh'):
+def initialize_lstm(lstm_units=50, lstm_activation='tanh'):
 
     model = Sequential()
     model.add(Masking())
-    model.add(LSTM(units=lstm_units, activation=lstm_activation))
-    model.add(Dense(10, activation="tanh"))
+    model.add(LSTM(units=lstm_units, activation=lstm_activation, return_sequences=True))
+    model.add(Dropout(0.3))
+    model.add(LSTM(50, activation=lstm_activation))
+    model.add(Dropout(0.3))
+    model.add(Dense(20, activation="relu"))
     model.add(Dense(1, activation='sigmoid'))
 
     return model
@@ -55,7 +83,7 @@ def compile_lstm_model(model: Model, loss='binary_crossentropy', optimizer='rmsp
 
     return model
 
-
+@simple_time_and_memory_tracker
 def train_lstm_model(
         model: Model,
         X: np.ndarray,
@@ -76,18 +104,20 @@ def train_lstm_model(
         verbose=1
     )
 
+
     history = model.fit(
         X,
         y,
         validation_data=validation_data,
         validation_split=validation_split,
-        epochs=100,
+        epochs=50,
         batch_size=batch_size,
         callbacks=[es],
-        verbose=0
+        verbose=1
     )
 
-    print(f"✅ Model trained on {len(X)} rows with max val accuracy: {round(np.min(history.history['val_accuracy']), 2)}, max val recall: {round(np.min(history.history['val_recall']), 2)}")
+
+    print(f"✅ Model trained on {len(X)} rows with max val accuracy: {round(np.max(history.history['val_accuracy']), 2)}, max val recall: {round(np.max(history.history['val_recall']), 2)}, max val precision: {round(np.max(history.history['val_precision']), 2)}")
 
     return model, history
 
@@ -123,3 +153,10 @@ def evaluate_lstm_model(
     print(f"✅ Model evaluated, recall: {round(recall, 2)}, accuracy: {round(accuracy, 2)}")
 
     return metrics
+
+
+##### PRELIMINARY RESULTS:
+#{'loss': 0.5114620327949524,
+# 'accuracy': 0.7444544434547424,
+# 'precision': 0.7088000178337097,
+# 'recall': 0.6040909290313721}
