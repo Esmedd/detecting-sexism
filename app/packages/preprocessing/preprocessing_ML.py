@@ -74,4 +74,5 @@ def preprocessing(data:pd.DataFrame, text_col:str, stop_words=True, sent_tokeniz
     if lemmatize==True:                 ### lemmatize sentences
         tokenized = lemmatizer(tokenized, text_col)
 
+    print("✅ Preprocessing is done")
     return tokenized
