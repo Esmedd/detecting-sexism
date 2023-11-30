@@ -1,10 +1,10 @@
 from app.packages.preprocessing.cleaning import *
 from app.packages.preprocessing.preprocessing_ML import *
 # from app.packages.preprocessing.translate import *
-from app.ml_logic.multinomial.multinomial_model import *
+from app.models.multinomial.multinomial_model import *
 from app.packages.data_storage.data_storage import *
 from app.packages.data_storage.registry import *
-from app.ml_logic.lstm.lstm_model import *
+from app.models.lstm.lstm_model import *
 
 from sklearn.model_selection import train_test_split, cross_validate
 
@@ -18,15 +18,18 @@ usr_label = "[USERNAME]"
 target = "sexist_binary"
 preproc_name="test01"
 split_ratio = 0.2
+model_names = ["conv1d", "GRU", "LSTM", "multinomial", "BERT"]
+model_name = "conv1d"
 
-def preprocess():
+def preprocess(model_name:str):
     """"""
     # Call Cleaning function and return a df
     clean = cleaning(DB_URL)
     df = clean.all_in_one(clean.data,text_col,selected_col,concatenate,url_label, usr_label)
 
+    # Save the cleaned DataFrame locally and in Big Query
     load_data_to_bq(
-    data_processed,
+    df,
     gcp_project=GCP_PROJECT,
     bq_dataset=BQ_DATASET,
     table=f'df_cleaned',
@@ -36,12 +39,16 @@ def preprocess():
     # Split X and y and preprocess X
     X = df.drop(target, axis=1)
     y = df[[target]]
-    X_preproc = preprocessing(X,text_col,False,False, True)
+
+    X_preproc = test_test(X, model_name)
+    # X_preproc = preprocessing(X,text_col,False,False, True)
+
     # Create a df from X preprocessed and y in order to save it
     data_processed = pd.DataFrame(np.concatenate((
         X_preproc,
         y
     ),axis=1))
+
 
     load_data_to_bq(
     data_processed,
@@ -73,7 +80,6 @@ def train(model_name:str, loss):
     X_processed = data_processed[:, :-1]
     y = data_processed[:, -1]
 
-    X_train, X_test, y_train, y_test = train_test_split(X_processed, y , split_ratio)
 
         # Train model using `model.py`
     model = load_model(model_name=model_name)
@@ -100,7 +106,7 @@ def train(model_name:str, loss):
         row_count=len(X_train),
     )
 
-    # Save results on the hard drive using taxifare.ml_logic.registry
+    # Save results on the hard drive using taxifare.models.registry
     save_results(params=params, metrics=dict(val_loss=val_loss))
 
     # Save model weight on the hard drive (and optionally on GCS too!)
@@ -174,7 +180,7 @@ def train_LSTM(model_name:str, loss="val_loss"):
         row_count=len(X_train),
     )
 
-    # Save results on the hard drive using taxifare.ml_logic.registry
+    # Save results on the hard drive using taxifare.models.registry
     save_results(params=params, metrics=dict(val_loss=val_loss))
 
     # Save model weight on the hard drive (and optionally on GCS too!)
@@ -186,7 +192,7 @@ def train_LSTM(model_name:str, loss="val_loss"):
 
     print("✅ train() done \n")
 
-train_LSTM("LSTM")
+#train_LSTM("LSTM")
 
 
 
