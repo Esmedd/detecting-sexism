@@ -4,7 +4,7 @@ import pandas as pd
 from app.packages.utils import *
 from tensorflow.keras.preprocessing.text import text_to_word_sequence, Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras import layers, Sequential, models, metrics, Model
+from tensorflow.keras import layers, Sequential, models, metrics, Model, callbacks
 from tensorflow.keras.layers import Embedding, Conv1D, GlobalMaxPooling1D, Dense, Dropout, MaxPooling1D, Flatten
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping
@@ -74,20 +74,28 @@ def train_c1d_model(
 
     print("\nTraining model...")
 
-    es = EarlyStopping(
-        patience=patience,
-        restore_best_weights=True,
-        verbose=1
-    )
+    modelCheckpoint = callbacks.ModelCheckpoint("{}.h5".format("intialize_c1d"),
+                                                monitor="val_accuracy",
+                                                save_best_only = True)
+
+
+    LR_reducer = callbacks.ReduceLROnPlateau(patience = 4,
+                                            monitor="val_accuracy",
+                                            factor = 0.1,
+                                            min_lr = 0
+                                            )
+
+    early_stopper = callbacks.EarlyStopping(patience = 5,
+                                            monitor="val_accuracy",
+                                            restore_best_weights=True)
 
     history = model.fit(
         X,
         y,
-        validation_data=validation_data,
         validation_split=validation_split,
         epochs=50,
         batch_size=batch_size,
-        callbacks=[es],
+        callbacks=[modelCheckpoint, LR_reducer, early_stopper],
         verbose=1
     )
 

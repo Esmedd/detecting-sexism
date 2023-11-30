@@ -17,7 +17,7 @@ BQ_DATASET = "merged_df_en" #os.environ.get("BQ_DATASET")
 BQ_REGION = "europe-west9" #os.environ.get("BQ_REGION")
 BUCKET_NAME = "youre-not-sexist" #os.environ.get("BUCKET_NAME")
 
-#os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.environ.get("GCP_key")
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.environ.get("GCP_key")
 
 ##################  CONSTANTS  #####################
 LOCAL_RAW_DATA_PATH = os.path.join(os.path.expanduser('~'),"code","Esmedd", "detecting-sexism", "data", "raw_data", "merged_df_en.csv")
