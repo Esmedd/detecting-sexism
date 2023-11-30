@@ -58,6 +58,7 @@ def load_data_to_bq(
     data.columns = [f"_{column}" if not str(column)[0].isalpha() and not str(column)[0] == "_" else str(column) for column in data.columns]
 
     client = bigquery.Client(project=gcp_project)
+    client = bu
 
     # Define write mode and schema
     write_mode = "WRITE_TRUNCATE" if truncate else "WRITE_APPEND"
