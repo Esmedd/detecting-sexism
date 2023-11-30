@@ -15,7 +15,7 @@ def preprocessing_cld(X, maxlen=100):
     Takes a single column df, X (as a list), as input. Returns the preprocessed X,
     the maxlen and the vocab size as output for use in initialize model function
     """
-    X_word = [text_to_word_sequence(x) for x in X]
+    X_word = [text_to_word_sequence(x) for x in X.tolist()]
 
     tk = Tokenizer()
     tk.fit_on_texts(X_word)
@@ -38,6 +38,7 @@ def intialize_c1d(vocab_size, maxlen, embedding_size=100, loss='binary_crossentr
     model.add(Embedding(input_dim=vocab_size+1, output_dim=embedding_size, input_length=maxlen, mask_zero=True))
     model.add(Conv1D(64, kernel_size=3,padding='same', activation='relu'))
     model.add(Conv1D(128, kernel_size=4,padding='same', activation='relu'))
+    model.add(Conv1D(128, kernel_size=5,padding='same', activation='relu'))
 
     if globalmax:
         model.add(GlobalMaxPooling1D())
@@ -80,7 +81,7 @@ def train_c1d_model(
     )
 
     history = model.fit(
-        X.tolist(),
+        X,
         y,
         validation_data=validation_data,
         validation_split=validation_split,
@@ -112,7 +113,7 @@ def evaluate_c1d_model(
         return None
 
     metrics = model.evaluate(
-        x=X.tolist(),
+        x=X,
         y=y,
         batch_size=batch_size,
         verbose=0,
