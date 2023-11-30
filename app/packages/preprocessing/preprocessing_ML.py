@@ -3,7 +3,8 @@ from app.packages.utils import *
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk import word_tokenize, sent_tokenize
-from keras.preprocessing.text import text_to_word_sequence
+from keras.preprocessing.text import text_to_word_sequence, Tokenizer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from keras.utils import pad_sequences
 import numpy as np
 from gensim.models import Word2Vec
@@ -31,14 +32,6 @@ def remove_stop_words(data:pd.DataFrame, text_col:str): # remove stop words (eng
 def lemmatizer(data:pd.DataFrame, text_col:str): # lemmatize text
     df = data.copy()
     lem = WordNetLemmatizer()
-    # verb_lemmatized = [
-    #     WordNetLemmatizer().lemmatize(word, pos='v')
-    #     for word in tokens]
-    # noun_lemmatized = [WordNetLemmatizer().lemmatize(word, pos='n')
-    #                    for word in verb_lemmatized]
-    # adj_lemmatized = [WordNetLemmatizer().lemmatize(word, pos = 'a')
-    #                   for word in noun_lemmatized]
-
     df[text_col] = df[text_col].apply(lambda x: " ".join([lem.lemmatize(word, pos="v")for word in x]))
     return df
 
@@ -47,24 +40,8 @@ def lemmatizer(data:pd.DataFrame, text_col:str): # lemmatize text
 ###################### MAIN PREPROCESSING FUNCTION ##########################################################
 ###############################################################################################################
 
-##### Preprocessing function. Optional parameters:
-# punctuation = True (removes punctuation),
-# stop_words = True (removes stop_words),
-# sent_tokenize = False (words are tokenized, not sentences)
-# lemmatize = False (sentences are not lemmatized)
-# EXMPAMPLE # data['text_clean'] = data['text'].apply(lambda x: preprocessing_ML.preprocessing(x, stop_words=False))
 
 def preprocessing(data:pd.DataFrame, text_col:str, stop_words=True, sent_tokenize=False, lemmatize=False):
-
-    # if not isinstance(sentence, str):   ### Check if the input is not a string
-    #     return ""
-
-    # sentence = lower_case(sentence)     ### lower case
-    # sentence = remove_accents(sentence) ### remove accents
-
-    # if punctuation==True:               ### remove punctuation (if punctuation == True)
-    #     for punctuation in string.punctuation:
-    #         sentence = sentence.replace(punctuation, ' ')
 
     if sent_tokenize==True:             ### tokenize rows to words or sentences
         tokenized = tokenize_sentences(data,text_col)
@@ -90,16 +67,17 @@ def preprocessing(data:pd.DataFrame, text_col:str, stop_words=True, sent_tokeniz
 model_names = ["conv1d", "GRU", "LSTM", "multinomial", "BERT"]
 
 
-def test_test(model_name:str):
+def test_test(X_cleaned:pd.DataFrame, model_name:str):
 
     if model_name == "LSTM":
-        LSTM_preprocess()
+        LSTM_preprocess(X_cleaned)
     if model_name == "multinomial":
         Multinomial_preprocess()
     if model_name == "GRU":
         GRU_preprocess()
     if model_name == "conv1d":
         Conv1d_preprocess()
+
     if model_name == "BERT":
         BERT_preprocess()
 
@@ -144,14 +122,67 @@ def test_test(model_name:str):
 
 
 
-    def Multinomial_preprocess():
-        pass
+    def Multinomial_preprocess(X_cleaned):
+        preprocessing(X_cleaned, stop_words=True, sent_tokenize=False, lemmatize=False)
+
+        @simple_time_and_memory_tracker
+        def tokenize_words(data:pd.DataFrame, text_col:str): #tokenizes text to words
+            df = data.copy()
+            df[text_col] = df[text_col].apply(lambda x: word_tokenize(x))
+            return df
+
+        @simple_time_and_memory_tracker
+        def tokenize_sentences(data:pd.DataFrame, text_col:str): #tokenizes text to sentences
+            df = data.copy()
+            df[text_col] = df[text_col].apply(lambda x: sent_tokenize(x))
+            return df
+
+        @simple_time_and_memory_tracker
+        def remove_stop_words(data:pd.DataFrame, text_col:str): # remove stop words (english)
+            df = data.copy()
+            stop_words = set(stopwords.words('english')) # Make stopword list
+            df[text_col] = df[text_col].apply(lambda x: [word for word in x if not word in stop_words])
+            return df
+
+        @simple_time_and_memory_tracker
+        def lemmatizer(data:pd.DataFrame, text_col:str): # lemmatize text
+            df = data.copy()
+            lem = WordNetLemmatizer()
+            df[text_col] = df[text_col].apply(lambda x: " ".join([lem.lemmatize(word, pos="v")for word in x]))
+            return df
+
+        def preprocessing(data:pd.DataFrame, text_col:str, stop_words=True, sent_tokenize=False, lemmatize=False):
+            if sent_tokenize==True:             ### tokenize rows to words or sentences
+                tokenized = tokenize_sentences(X_cleaned,text_col)
+            else:
+                tokenized = tokenize_words(X_cleaned,text_col)
+            if stop_words==True:                ### remove stop words (if stop_words==True)
+                tokenized = remove_stop_words(tokenized, text_col)
+            if lemmatize==True:                 ### lemmatize sentences
+                tokenized = lemmatizer(tokenized, text_col)
+            print("✅ Preprocessing is done")
+            return tokenized
 
     def GRU_preprocess():
-        pass
+        LSTM_preprocess()
 
     def Conv1d_preprocess():
-        pass
+
+        @simple_time_and_memory_tracker
+        def preprocessing_cld(X : pd.DataFrame, maxlen=100):
+            """ Preprocess X data for a Conv1D model
+            Takes a single column df, X (as a list), as input. Returns the preprocessed X,
+            the maxlen and the vocab size as output for use in initialize model function
+            """
+            X_word = [text_to_word_sequence(x) for x in X.tolist()]
+
+            tk = Tokenizer()
+            tk.fit_on_texts(X_word)
+            X_token = tk.texts_to_sequences(X_word)
+            vocab_size = len(tk.word_index)
+
+            X_token_pad = pad_sequences(X_token, dtype=float, padding='post', maxlen=maxlen)
+            return X_token_pad, vocab_size, maxlen
 
     def BERT_preprocess():
         pass
