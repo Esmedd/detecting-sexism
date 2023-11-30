@@ -3,6 +3,10 @@ from app.packages.utils import *
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk import word_tokenize, sent_tokenize
+from keras.preprocessing.text import text_to_word_sequence
+from keras.utils import pad_sequences
+import numpy as np
+from gensim.models import Word2Vec
 
 @simple_time_and_memory_tracker
 def tokenize_words(data:pd.DataFrame, text_col:str): #tokenizes text to words
@@ -76,3 +80,78 @@ def preprocessing(data:pd.DataFrame, text_col:str, stop_words=True, sent_tokeniz
 
     print("✅ Preprocessing is done")
     return tokenized
+
+
+
+##############################   UPDATING PREPROCESSING  ################################################
+
+
+
+model_names = ["conv1d", "GRU", "LSTM", "multinomial", "BERT"]
+
+
+def test_test(model_name:str):
+
+    if model_name == "LSTM":
+        LSTM_preprocess()
+    if model_name == "multinomial":
+        Multinomial_preprocess()
+    if model_name == "GRU":
+        GRU_preprocess()
+    if model_name == "conv1d":
+        Conv1d_preprocess()
+    if model_name == "BERT":
+        BERT_preprocess()
+
+    def LSTM_preprocess():
+
+        def tokenize(df_column, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n', lower=True, split=' '):
+            """ tokenize a column
+            df_column (pandas.Series): The DataFrame column containing text.
+            filters: The set of characters to filter out. defaults to remove punctuation.
+            lower: Whether to convert the text to lowercase. defaults to true.
+            split: The split to use for splitting the text. Defaults to ' ' (space).
+
+            Returns:
+            list of lists: list where each element is a list of tokens from a row in the input column.
+            """
+            return df_column.astype(str).apply(lambda x: text_to_word_sequence(x, filters=filters, lower=lower, split=split)).tolist()
+
+        def w2v_train_and_embed(X_train, vector_size, window, dtype='float32', padding='post'):
+
+            """Returns a list of embedded, padded sentences (each sentence is a matrix).
+            Takes vectorizing arguments "vector_size" and "window"
+            Takes padding arguments dtype & padding
+            """
+            word2vec = Word2Vec(sentences=X_train, vector_size=vector_size, window=window)
+
+            def embed_sentence(wv, sentence):
+                return np.array([wv[i] for i in sentence if i in wv])
+            wv = word2vec.wv
+            embedded = [embed_sentence(wv, s) for s in X_train]
+            return pad_sequences(embedded, dtype=dtype, padding=padding), word2vec
+
+        def w2v_embed(X_test, word2vec_model, max_length, dtype='float32', padding='post'):
+            """
+            Embed sentences using a trained Word2Vec model.
+            """
+            def embed_sentence(wv, sentence):
+                return np.array([wv[i] for i in sentence if i in wv])
+            # Embedding the sentences
+            wv = word2vec_model.wv
+            embedded_X = [embed_sentence(wv, s) for s in X_test]
+            return pad_sequences(embedded_X, maxlen=max_length, dtype=dtype, padding=padding)
+
+
+
+    def Multinomial_preprocess():
+        pass
+
+    def GRU_preprocess():
+        pass
+
+    def Conv1d_preprocess():
+        pass
+
+    def BERT_preprocess():
+        pass
