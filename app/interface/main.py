@@ -1,10 +1,10 @@
 from app.packages.preprocessing.cleaning import *
 from app.packages.preprocessing.preprocessing_ML import *
 # from app.packages.preprocessing.translate import *
-from app.ml_logic.multinomial.multinomial_model import *
+from app.models.multinomial.multinomial_model import *
 from app.packages.data_storage.data_storage import *
 from app.packages.data_storage.registry import *
-from app.ml_logic.lstm.lstm_model import *
+from app.models.lstm.lstm_model import *
 
 from sklearn.model_selection import train_test_split, cross_validate
 
@@ -100,7 +100,7 @@ def train(model_name:str, loss):
         row_count=len(X_train),
     )
 
-    # Save results on the hard drive using taxifare.ml_logic.registry
+    # Save results on the hard drive using taxifare.models.registry
     save_results(params=params, metrics=dict(val_loss=val_loss))
 
     # Save model weight on the hard drive (and optionally on GCS too!)
@@ -174,7 +174,7 @@ def train_LSTM(model_name:str, loss="val_loss"):
         row_count=len(X_train),
     )
 
-    # Save results on the hard drive using taxifare.ml_logic.registry
+    # Save results on the hard drive using taxifare.models.registry
     save_results(params=params, metrics=dict(val_loss=val_loss))
 
     # Save model weight on the hard drive (and optionally on GCS too!)
