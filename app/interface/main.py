@@ -156,7 +156,10 @@ def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_p
     if model_name == "LSTM":
         if preproc_params["embed"] == True:
             pass
-            # return Embed_LSTM_preproc(X_train, X_test, params)
+            model = initialize_lstm(lstm_units=model_params["lstm_units"],lstm_activation=model_params["lstm_activation"], embedding=preproc_params["embed"])
+            model = compile_lstm_model(model=model, loss=model_params["loss"], optimizer=model_params['optimizer'])
+            model, history = train_lstm_model(model=model, X=X_train_preproc, y=y_train, batch_size=model_params["batch_size"], patience=model_params["patience"],validation_data=None,validation_split=model_params["validation_split"])
+
         else:
             model = initialize_lstm(lstm_units=model_params["lstm_units"],lstm_activation=model_params["lstm_activation"], embedding=preproc_params["embed"])
             model = compile_lstm_model(model=model, loss=model_params["loss"], optimizer=model_params['optimizer'])
@@ -188,6 +191,8 @@ def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_p
     save_results(params=params, metrics=dict(val_loss=val_loss))
 
     # Save model weight on the hard drive (and optionally on GCS too!)
+    if preproc_params["embed"] == True:
+        model_name = f"{model_name}_embed"
     save_model(model_name=model_name,model=model)
 
     # The latest model should be moved to staging
@@ -197,7 +202,8 @@ def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_p
     print("✅ train() done \n")
 
 @mlflow_run
-def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:str="Production",batch_size:int=32) -> float:
+def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:str="Staging",batch_size:int=32) -> float:
+
     """
     Evaluate the performance of the latest production model on processed data
     Return MAE as a float
@@ -209,12 +215,9 @@ def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:st
 
 
     if model_name == "LSTM":
-        if preproc_params["embed"] == True:
-            pass
-            # return Embed_LSTM_preproc(X_train, X_test, params)
-        else:
-            metrics = evaluate_lstm_model(model, X=X_test_preproc, y=y_test, batch_size=batch_size )
-
+        metrics = evaluate_lstm_model(model, X=X_test_preproc, y=y_test, batch_size=batch_size )
+    if model_name == "LSTM_embed":
+        metrics = evaluate_lstm_model(model, X=X_test_preproc, y=y_test, batch_size=batch_size )
     if model_name == "multinomial":
         pass
     if model_name == "GRU":
@@ -239,14 +242,14 @@ def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:st
     return metrics
 
 
-def pred(model_name:str,X_pred: pd.DataFrame = None) -> np.ndarray:
+def pred(model_name:str,stage:str="Production",X_pred: pd.DataFrame = None) -> np.ndarray:
     """
     Make a prediction using the latest trained model
     """
 
     print("\n⭐️ Use case: predict")
 
-    model = load_model(model_name=model_name)
+    model = load_model(model_name=model_name, stage=stage)
     assert model is not None
     X_proc, to_ignore = preproc_test(X_pred, X_pred, model_name, preproc_params_LSTM)
 
