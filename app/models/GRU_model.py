@@ -40,6 +40,16 @@ def compile_gru_model(model, loss='binary_crossentropy', optimizer='rmsprop'):
 
     return model
 
+def compile_gru_model_focal(model, loss='binary_focal_crossentropy', optimizer='rmsprop'):
+    precision = metrics.Precision()
+    recall = metrics.Recall()
+    model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy', precision, recall])
+
+    print("✅ Model compiled")
+
+    return model
+
+
 def train_gru_model(
         model,
         X,
@@ -72,6 +82,40 @@ def train_gru_model(
 
     return model, history
 
+def train_gru_model_focal(
+        model,
+        X,
+        y,
+        batch_size=64,
+        patience=4,
+        validation_data=None,  # overrides validation_split
+        validation_split=0.2
+) -> Tuple:
+    print("\nTraining model...")
+
+    es = EarlyStopping(
+        patience=patience,
+        restore_best_weights=True,
+        verbose=1
+    )
+
+    history = model.fit(
+        X,
+        y,
+        validation_data=validation_data,
+        validation_split=validation_split,
+        epochs=50,
+        batch_size=batch_size,
+        callbacks=[es],
+        verbose=1
+    )
+
+    print(f"✅ Model trained on {len(X)} rows with max val accuracy: {round(np.max(history.history['val_accuracy']), 2)}, max val recall: {round(np.max(history.history['val_recall_1']), 2)}, max val precision: {round(np.max(history.history['val_precision_1']), 2)}")
+
+    return model, history
+
+
+
 def evaluate_gru_model(model, X, y, batch_size=64) -> Tuple:
     print(f"\nEvaluating model on {len(X)} rows...")
 
@@ -91,10 +135,31 @@ def evaluate_gru_model(model, X, y, batch_size=64) -> Tuple:
     accuracy = metrics["accuracy"]
     recall = metrics["recall"]
 
-    print(f"✅ Model evaluated, recall: {round(recall, 2)}, accuracy: {round(accuracy, 2)}")
+    print(f"✅ Model evaluated with loss:{loss}, recall: {round(recall, 2)}, accuracy: {round(accuracy, 2)}")
 
     return metrics
+def evaluate_gru_model_focal(model, X, y, batch_size=64) -> Tuple:
+    print(f"\nEvaluating model on {len(X)} rows...")
 
+    if model is None:
+        print(f"\n❌ No model to evaluate")
+        return None
+
+    metrics = model.evaluate(
+        x=X,
+        y=y,
+        batch_size=batch_size,
+        verbose=0,
+        return_dict=True
+    )
+
+    loss = metrics["loss"]
+    accuracy = metrics["accuracy"]
+    recall = metrics["recall_1"]
+
+    print(f"✅ Model evaluated with loss:{loss}, recall: {round(recall, 2)}, accuracy: {round(accuracy, 2)}")
+
+    return metrics
 
 ##### PRELIMINARY RESULTS:
 # {'loss': 0.5017110705375671,
