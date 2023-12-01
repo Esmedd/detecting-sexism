@@ -11,7 +11,7 @@ from keras.preprocessing.text import text_to_word_sequence, Tokenizer
 from keras import Model, Sequential, regularizers, optimizers
 from keras.callbacks import EarlyStopping
 from keras.layers import *
-from keras import metrics
+
 
 import numpy as np
 
@@ -76,6 +76,7 @@ def embed_preprocessing():
 def initialize_lstm(lstm_units=50, lstm_activation='tanh', embedding:bool=False):
 
     if embedding == True:
+        max_length = 100
         tk = Tokenizer()
         model_wiki = gensim.downloader.load('glove-twitter-200') # loads dataset (Glove Twitter, 100dimensions)
         embedding_dim = 200  # GloVe vectors dimension
@@ -106,9 +107,7 @@ def compile_lstm_model(model: Model, loss='binary_crossentropy', optimizer='rmsp
     """
     Compile the Neural Network
     """
-    precision = metrics.Precision()
-    recall = metrics.Recall()
-    model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy', precision, recall])
+    model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy', "Precision", "Recall"])
 
     print("✅ Model compiled")
 
