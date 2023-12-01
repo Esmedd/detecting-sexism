@@ -50,6 +50,10 @@ MLFLOW_TRACKING_URI="https://mlflow.lewagon.ai"
 MLFLOW_EXPERIMENT="You_are_not_sexist-experiment"
 MLFLOW_MODEL_NAME="You_are_not_sexist-model"
 
+##################   Prefect    ####################
+PREFECT_FLOW_NAME = "you_are_not_sexist"
+PREFECT_LOG_LEVEL = "WARNING"
+
 ##################     GCP     #####################
 GCP_PROJECT = "youre-not-sexist" #os.environ.get("GCP_PROJECT")
 GCP_PROJECT_WAGON = "" #os.environ.get("GCP_PROJECT_WAGON")
