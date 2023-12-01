@@ -166,7 +166,7 @@ def train(model_name:str, preproc_params, model_params):
             pass
             # return Embed_LSTM_preproc(X_train, X_test, params)
         else:
-            model = initialize_lstm(lstm_units=model_params["lstm_units"],lstm_activation=model_params["lstm_activation"])
+            model = initialize_lstm(lstm_units=model_params["lstm_units"],lstm_activation=model_params["lstm_activation"], embedding=preproc_params["embed"])
             model = compile_lstm_model(model=model, loss=model_params["loss"], optimizer=model_params['optimizer'])
             model, history = train_lstm_model(model=model, X=X_train_preproc, y=y_train, batch_size=model_params["batch_size"], patience=model_params["patience"],validation_data=None,validation_split=model_params["validation_split"])
 
