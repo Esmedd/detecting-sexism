@@ -183,7 +183,8 @@ def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, param
             Takes a single column df, X (as a list), as input. Returns the preprocessed X,
             the maxlen and the vocab size as output for use in initialize model function
             """
-            X_word = [text_to_word_sequence(x) for x in X.tolist()]
+            X_l = X.tolist()
+            X_word = [text_to_word_sequence(x) for x in X_l]
 
             tk = Tokenizer()
             tk.fit_on_texts(X_word)
