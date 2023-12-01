@@ -196,7 +196,7 @@ def train(model_name:str, preproc_params, model_params):
     save_results(params=params, metrics=dict(val_loss=val_loss))
 
     # Save model weight on the hard drive (and optionally on GCS too!)
-    save_model(model=model)
+    save_model(model_name=model_name,model=model)
 
     # The latest model should be moved to staging
     if MODEL_TARGET == 'mlflow':

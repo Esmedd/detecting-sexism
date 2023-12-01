@@ -148,7 +148,9 @@ def train_lstm_model(
     )
 
 
-    print(f"✅ Model trained on {len(X)} rows with max val accuracy: {round(np.max(history.history['val_accuracy']), 2)}, max val recall: {round(np.max(history.history['val_recall']), 2)}, max val precision: {round(np.max(history.history['val_precision']), 2)}")
+
+
+    #print(f"✅ Model trained on {len(X)} rows with max val accuracy: {round(np.max(history.history['val_accuracy']), 2)}, max val recall: {round(np.max(history.history['val_recall']), 2)}, max val precision: {round(np.max(history.history['val_precision']), 2)}")
 
     return model, history
 
