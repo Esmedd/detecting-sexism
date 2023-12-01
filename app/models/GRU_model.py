@@ -4,7 +4,6 @@ import numpy as np
 from tensorflow import keras
 from keras.callbacks import EarlyStopping
 from keras import metrics
-from colorama import Fore, Style
 from tensorflow import keras
 from keras import Model, Sequential, regularizers, optimizers
 from keras.callbacks import EarlyStopping

@@ -5,7 +5,6 @@ import gensim.downloader
 from typing import Tuple
 from tensorflow import keras
 from keras.utils import pad_sequences
-from colorama import Fore, Style
 from app.packages.utils import *
 from keras.preprocessing.text import text_to_word_sequence, Tokenizer
 from keras import Model, Sequential, regularizers, optimizers
