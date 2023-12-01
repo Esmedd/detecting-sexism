@@ -88,6 +88,8 @@ def preprocess(model_name:str, params):
     clean = cleaning(DB_URL)
     df = clean.all_in_one(clean.data,text_col,selected_col,concatenate,url_label, usr_label)
 
+    global X_test_preproc
+    global y_test
     # Split X and y and preprocess X
     X = df.drop(target, axis=1)
     y = df[[target]]
@@ -141,8 +143,7 @@ def train(model_name:str, preproc_params, model_params):
 
     We could go further and add to dictionnary the number of neruons per layer, etc.
     """
-    global X_test_preproc
-    global y_test
+
     X_train_preproc, X_test_preproc, y_train, y_test = preprocess(model_name, preproc_params)
 
     if model_name == "conv1d":
@@ -160,8 +161,6 @@ def train(model_name:str, preproc_params, model_params):
 
     # if model is None:
     #     pass
-
-    global X_test_preproc
     if model_name == "LSTM":
         if params["embed"] == True:
             pass
