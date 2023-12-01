@@ -203,6 +203,7 @@ def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_p
 
 @mlflow_run
 def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:str="Staging",batch_size:int=32) -> float:
+
     """
     Evaluate the performance of the latest production model on processed data
     Return MAE as a float
