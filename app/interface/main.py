@@ -210,7 +210,7 @@ def evaluate(model_name:str, batch_size:int,stage:str, preproc_params:dict) -> f
     Evaluate the performance of the latest production model on processed data
     Return MAE as a float
     """
-    print(Fore.MAGENTA + "\n⭐️ Use case: evaluate" + Style.RESET_ALL)
+    print("\n⭐️ Use case: evaluate")
 
     model = load_model(model_name=model_name,stage=stage)
     assert model is not None
