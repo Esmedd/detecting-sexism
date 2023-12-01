@@ -63,7 +63,7 @@ def clean():
     truncate=True
     )
 
-def preprocess(model_name:str, params):
+def preprocess(model_name:str, preproc_params):
     """
     >>> Initialize preprocessing depending on 'model_name'
 
@@ -96,9 +96,9 @@ def preprocess(model_name:str, params):
     X_train, X_test, y_train, y_test = train_test_split(X, y , test_size=split_ratio)
 
     if model_name == "conv1d":
-        X_train_preproc, X_test_preproc = preproc_test(X_train, X_test, model_name, params)
+        X_train_preproc, X_test_preproc = preproc_test(X_train, X_test, model_name, preproc_params)
     else:
-        X_train_preproc, X_test_preproc = preproc_test(X_train, X_test, model_name, params)
+        X_train_preproc, X_test_preproc = preproc_test(X_train, X_test, model_name, preproc_params)
 
     print("✅ preprocess() done \n")
     return X_train_preproc, X_test_preproc, y_train, y_test
@@ -162,7 +162,7 @@ def train(model_name:str, preproc_params, model_params):
     # if model is None:
     #     pass
     if model_name == "LSTM":
-        if params["embed"] == True:
+        if preproc_params["embed"] == True:
             pass
             # return Embed_LSTM_preproc(X_train, X_test, params)
         else:
@@ -205,7 +205,7 @@ def train(model_name:str, preproc_params, model_params):
     print("✅ train() done \n")
 
 @mlflow_run
-def evaluate(model_name:str, batch_size:int,stage:str) -> float:
+def evaluate(model_name:str, batch_size:int,stage:str, preproc_params:dict) -> float:
     """
     Evaluate the performance of the latest production model on processed data
     Return MAE as a float
@@ -235,7 +235,7 @@ def evaluate(model_name:str, batch_size:int,stage:str) -> float:
     #     return None
 
     if model_name == "LSTM":
-        if params["embed"] == True:
+        if preproc_params["embed"] == True:
             pass
             # return Embed_LSTM_preproc(X_train, X_test, params)
         else:
