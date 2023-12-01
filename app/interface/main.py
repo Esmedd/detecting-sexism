@@ -183,7 +183,7 @@ def train(model_name:str, preproc_params, model_params):
     # if model_name == "BERT":
     #     BERT_preprocess()
 
-    val_loss = np.min(history.history[model_params["loss"]])
+    val_loss = np.min(history.history["loss"])
 
     params = dict(
         context="you_are_not_sexist",

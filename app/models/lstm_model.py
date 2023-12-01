@@ -1,12 +1,13 @@
 ## Vectorizing/Embedding - Word2Vec
 
 from gensim.models import Word2Vec
+import gensim.downloader
 from typing import Tuple
 from tensorflow import keras
 from keras.utils import pad_sequences
 from colorama import Fore, Style
 from app.packages.utils import *
-from keras.preprocessing.text import text_to_word_sequence
+from keras.preprocessing.text import text_to_word_sequence, Tokenizer
 from keras import Model, Sequential, regularizers, optimizers
 from keras.callbacks import EarlyStopping
 from keras.layers import *
@@ -72,10 +73,26 @@ def embed_preprocessing():
 
 
 
-def initialize_lstm(lstm_units=50, lstm_activation='tanh'):
+def initialize_lstm(lstm_units=50, lstm_activation='tanh', embedding:bool=False):
+
+    if embedding == True:
+        tk = Tokenizer()
+        model_wiki = gensim.downloader.load('glove-twitter-200') # loads dataset (Glove Twitter, 100dimensions)
+        embedding_dim = 200  # GloVe vectors dimension
+        word_index = tk.word_index  # using fitted tokenizer
+        embedding_matrix = np.zeros((len(word_index) + 1, embedding_dim)) # initalize embedding matrix
+        for word, i in word_index.items():
+            try:
+                embedding_vector = model_wiki[word]
+                embedding_matrix[i] = embedding_vector
+            except KeyError:
+                continue
 
     model = Sequential()
-    model.add(Masking())
+    if embedding == False:
+        model.add(Masking())
+    elif embedding == True:
+        model.add(Embedding(len(word_index) + 1, embedding_dim, weights=[embedding_matrix], input_length=max_length, trainable=False))
     model.add(LSTM(units=lstm_units, activation=lstm_activation, return_sequences=True))
     model.add(Dropout(0.3))
     model.add(LSTM(50, activation=lstm_activation))
