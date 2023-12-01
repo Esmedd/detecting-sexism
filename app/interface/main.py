@@ -141,7 +141,8 @@ def train(model_name:str, preproc_params, model_params):
 
     We could go further and add to dictionnary the number of neruons per layer, etc.
     """
-
+    global X_test_preproc
+    global y_test
     X_train_preproc, X_test_preproc, y_train, y_test = preprocess(model_name, preproc_params)
 
     if model_name == "conv1d":
@@ -159,6 +160,8 @@ def train(model_name:str, preproc_params, model_params):
 
     # if model is None:
     #     pass
+
+    global X_test_preproc
     if model_name == "LSTM":
         if params["embed"] == True:
             pass
@@ -167,7 +170,6 @@ def train(model_name:str, preproc_params, model_params):
             model = initialize_lstm(lstm_units=model_params["lstm_units"],lstm_activation=model_params["lstm_activation"])
             model = compile_lstm_model(model=model, loss=model_params["loss"], optimizer=model_params['optimizer'])
             model, history = train_lstm_model(model=model, X=X_train_preproc, y=y_train, batch_size=model_params["batch_size"], patience=model_params["patience"],validation_data=None,validation_split=model_params["validation_split"])
-
 
     if model_name == "multinomial":
         pass
@@ -203,81 +205,87 @@ def train(model_name:str, preproc_params, model_params):
 
     print("✅ train() done \n")
 
-
-####### TEST LSTM ########
-
 @mlflow_run
-def train_LSTM(model_name:str, loss="val_loss"):
+def evaluate(model_name:str, batch_size:int,stage:str) -> float:
+    """
+    Evaluate the performance of the latest production model on processed data
+    Return MAE as a float
+    """
+    print(Fore.MAGENTA + "\n⭐️ Use case: evaluate" + Style.RESET_ALL)
+
+    model = load_model(model_name=model_name,stage=stage)
+    assert model is not None
+
+    # # Query your BigQuery processed table and get data_processed using `get_data_with_cache`
     # query = f"""
     #     SELECT * EXCEPT(_0)
-    #     FROM {GCP_PROJECT}.{BQ_DATASET}.df_processed_by_{model_name}
-    #     ORDER BY _0 ASC
+    #     FROM {GCP_PROJECT}.{BQ_DATASET}.processed_{DATA_SIZE}
+    #     WHERE _0 BETWEEN '{min_date}' AND '{max_date}'
     # """
-    # data_processed_cache_path = Path(LOCAL_PROCESSED_DATA_PATH).joinpath(f"df_processed_by_{model_name}.csv")
 
-
+    # data_processed_cache_path = Path(f"{LOCAL_DATA_PATH}/processed/processed_{min_date}_{max_date}_{DATA_SIZE}.csv")
     # data_processed = get_data_with_cache(
     #     gcp_project=GCP_PROJECT,
     #     query=query,
     #     cache_path=data_processed_cache_path,
     #     data_has_header=False
     # )
-    clean = cleaning(DB_URL)
-    data = clean.all_in_one(clean.data, text_col, selected_col, False)
 
-    X = data.drop(target, axis=1)
-    y = data[[target]]
+    # if data_processed.shape[0] == 0:
+    #     print("❌ No data to evaluate on")
+    #     return None
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y , test_size=0.2)
+    if model_name == "LSTM":
+        if params["embed"] == True:
+            pass
+            # return Embed_LSTM_preproc(X_train, X_test, params)
+        else:
+            metrics = evaluate_lstm_model(model, X=X_test_preproc, y=y_test, batch_size=batch_size )
+
+    if model_name == "multinomial":
+        pass
+    if model_name == "GRU":
+        metrics = evaluate_gru_model(model,X_test_preproc, y_test, batch_size=batch_size)
+    if model_name == "conv1d":
+        metrics = evaluate_c1d_model(model, X=X_test_preproc, y=y_test, batch_size=batch_size)
+    # if model_name == "BERT":
 
 
-    max_length = 100
+    params = dict(
+        context="evaluate", # Package behavior,
+        row_count=len(X_test_preproc),
+        model_used=model_name,
+        loss_used=metrics["loss"],
+    )
 
-    X_train_token = tokenize(X_train.text)
-    X_test_token = tokenize(X_test.text)
-    X_train_truncated = [sentence[:max_length] for sentence in X_train_token]
-    X_train_padded, trained_word2vec_model = w2v_train_and_embed(X_train_truncated, vector_size=50, window=5)
-    print(X_train_padded.shape)
-    # X_test_padded = w2v_embed(X_test_token, trained_word2vec_model, max_length=len(X_train_padded[0]))
-    # model = initialize_lstm()
-    # model = compile_lstm_model(model)
-    # fitted_model, history = train_lstm_model(model, X_train_padded, y_train, validation_data = None, validation_split = 0.2)
-    # Train model using `model.py`
-    # model = load_model(model_name=model_name)
+    save_results(params=params, metrics=metrics)
 
-    # if model is None:
-    # pass
-        #model = initialize_model(input_shape=X_train.shape[1:])
+    print("✅ evaluate() done \n")
 
-    # model = compile_model(model, learning_rate=learning_rate)
-    # model, history = train_model(
-    #     model, X_train_processed, y_train,
-    #     batch_size=batch_size,
-    #     patience=patience,
-    #     validation_data=(X_val_processed, y_val)
-    # )
 
-    # val_loss = np.min(history.history[loss])
+    return metrics
 
-    # params = dict(
-    #     context="you_are_not_sexist",
-    #     model_used=model_name,
-    #     loss_used=loss,
-    #     row_count=len(X_train),
-    # )
 
-    # # Save results on the hard drive using taxifare.models.registry
-    # save_results(params=params, metrics=dict(val_loss=val_loss))
+def pred(model_name:str,X_pred: pd.DataFrame = None) -> np.ndarray:
+    """
+    Make a prediction using the latest trained model
+    """
 
-    # # Save model weight on the hard drive (and optionally on GCS too!)
-    # save_model(model=fitted_model, model_name=model_name)
+    print("\n⭐️ Use case: predict")
 
-    # # The latest model should be moved to staging
-    # if MODEL_TARGET == 'mlflow':
-    #     mlflow_transition_model(model_name=model_name ,current_stage="None", new_stage="Staging")
+    model = load_model(model_name=model_name)
+    assert model is not None
+    X_proc, to_ignore = preproc_test(X_pred, X_pred, model_name, preproc_params_LSTM)
 
-    # print("✅ train() done \n")
 
+    y_pred = model.predict(X_proc)
+
+    print("\n✅ prediction done: ", y_pred, y_pred.shape, "\n")
+    return y_pred
+
+#@mlflow_run
+# def evaluate(
+#      stage: str = "Production") -> float
 
 
 
