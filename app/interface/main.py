@@ -49,21 +49,19 @@ model_params_LSTM = {
 }
 
 
-def clean():
+def clean_from_path():
     # Call Cleaning function and return a df
-    clean = cleaning(DB_URL)
-    df = clean.all_in_one(clean.data,text_col,selected_col,concatenate,url_label, usr_label)
-
+    data_from_csv = init_data(DB_URL)
+    df = all_in_one(data_from_csv,text_col,selected_col,concatenate,url_label, usr_label)
+    return df
     # Save the cleaned DataFrame locally and in Big Query
-    load_data_to_bq(
-    df,
-    gcp_project=GCP_PROJECT,
-    bq_dataset=BQ_DATASET,
-    table=f'df_cleaned',
-    truncate=True
-    )
 
-def preprocess(model_name:str, preproc_params):
+def clean_new(data:pd.DataFrame):
+    df = all_in_one(data,text_col,selected_col,concatenate,url_label, usr_label)
+    return df
+
+
+def preprocess(model_name:str, cleaned_df:pd.DataFrame, preproc_params):
     """
     >>> Initialize preprocessing depending on 'model_name'
 
@@ -85,14 +83,10 @@ def preprocess(model_name:str, preproc_params):
     You can refer to your model in preprocessing_ML.py to see all the variables you can mention
     """
     # Call Cleaning function and return a df
-    clean = cleaning(DB_URL)
-    df = clean.all_in_one(clean.data,text_col,selected_col,concatenate,url_label, usr_label)
 
-    global X_test_preproc
-    global y_test
     # Split X and y and preprocess X
-    X = df.drop(target, axis=1)
-    y = df[[target]]
+    X = cleaned_df.drop(target, axis=1)
+    y = cleaned_df[[target]]
     X_train, X_test, y_train, y_test = train_test_split(X, y , test_size=split_ratio)
 
     if model_name == "conv1d":
@@ -107,7 +101,7 @@ def preprocess(model_name:str, preproc_params):
 
 
 @mlflow_run
-def train(model_name:str, preproc_params, model_params):
+def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_params:dict):
     """
     >>> Initialize preprocessing and training depending on 'model_name' then load it on Ml-flow
 
@@ -143,8 +137,6 @@ def train(model_name:str, preproc_params, model_params):
 
     We could go further and add to dictionnary the number of neruons per layer, etc.
     """
-
-    X_train_preproc, X_test_preproc, y_train, y_test = preprocess(model_name, preproc_params)
 
     if model_name == "conv1d":
         X_train_preproc = X_train_preproc[0]
@@ -200,12 +192,12 @@ def train(model_name:str, preproc_params, model_params):
 
     # The latest model should be moved to staging
     if MODEL_TARGET == 'mlflow':
-        mlflow_transition_model(current_stage="None", new_stage="Staging")
+        mlflow_transition_model(model_name=model_name,current_stage="None", new_stage="Staging")
 
     print("✅ train() done \n")
 
 @mlflow_run
-def evaluate(model_name:str, batch_size:int,stage:str, preproc_params:dict) -> float:
+def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:str="Production",batch_size:int=32) -> float:
     """
     Evaluate the performance of the latest production model on processed data
     Return MAE as a float
@@ -215,24 +207,6 @@ def evaluate(model_name:str, batch_size:int,stage:str, preproc_params:dict) -> f
     model = load_model(model_name=model_name,stage=stage)
     assert model is not None
 
-    # # Query your BigQuery processed table and get data_processed using `get_data_with_cache`
-    # query = f"""
-    #     SELECT * EXCEPT(_0)
-    #     FROM {GCP_PROJECT}.{BQ_DATASET}.processed_{DATA_SIZE}
-    #     WHERE _0 BETWEEN '{min_date}' AND '{max_date}'
-    # """
-
-    # data_processed_cache_path = Path(f"{LOCAL_DATA_PATH}/processed/processed_{min_date}_{max_date}_{DATA_SIZE}.csv")
-    # data_processed = get_data_with_cache(
-    #     gcp_project=GCP_PROJECT,
-    #     query=query,
-    #     cache_path=data_processed_cache_path,
-    #     data_has_header=False
-    # )
-
-    # if data_processed.shape[0] == 0:
-    #     print("❌ No data to evaluate on")
-    #     return None
 
     if model_name == "LSTM":
         if preproc_params["embed"] == True:
@@ -287,7 +261,13 @@ def pred(model_name:str,X_pred: pd.DataFrame = None) -> np.ndarray:
 #      stage: str = "Production") -> float
 
 
-
+def test_main(model_name:str, preproc_params:dict, model_params:dict, data:pd.DataFrame=None) :
+    if data == None:
+        data = init_data(DB_URL)
+    cleaned_df = clean_new(data)
+    X_train_preproc, X_test_preproc, y_train, y_test = preprocess(model_name=model_name,cleaned_df=cleaned_df ,preproc_params=preproc_params)
+    train(model_name, X_train_preproc, y_train, preproc_params,model_params)
+    metrics = evaluate(model_name, X_test_preproc, y_test,preproc_params)
 
 
 if __name__ == '__main__':

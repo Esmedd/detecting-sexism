@@ -5,28 +5,48 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from prefect import task, flow
 
-from app.interface.main import evaluate, preprocess, train
+from app.interface.main import *
+from app.packages.preprocessing.preprocessing_ML import *
 from app.packages.data_storage.registry import *
 from params import *
 
 
 ###### TO UPDATE COPY PASTA FROM TAXIFARE ######
 
+# @task
+# def preprocess_new_data(new_data: pd.DataFrame, model_name:str, preproc_params:dict):
+#     X_preproc, to_ignore = preproc_test(new_data,new_data, model_name, preproc_params)
+#     return X_preproc
+
 @task
-def preprocess_new_data(min_date: str, max_date: str):
-    return preprocess(min_date,max_date)
+def clean_data():
+    return clean_from_path()
+
+@task
+def preprocess_new_data(new_data: pd.DataFrame, model_name:str, preproc_params:dict):
+    X_preproc, to_ignore = preproc_test(new_data,new_data, model_name, preproc_params)
+    return X_preproc
+
 
 @task
 def evaluate_production_model(min_date: str, max_date: str):
     return evaluate(min_date,max_date)
 
 @task
-def re_train(min_date: str, max_date: str, split_ratio: str, lr:float ,b:int,pat:int):
-    return train(min_date,max_date,split_ratio, lr,b, pat)
+def train():
+    pass
 
-@task
-def transition_model(current_stage: str, new_stage: str):
-    return mlflow_transition_model(current_stage,new_stage)
+
+
+
+
+# @task
+# def re_train(min_date: str, max_date: str, split_ratio: str, lr:float ,b:int,pat:int):
+#     return train(min_date,max_date,split_ratio, lr,b, pat)
+
+# @task
+# def transition_model(current_stage: str, new_stage: str):
+#     return mlflow_transition_model(current_stage,new_stage)
 
 
 @flow(name=PREFECT_FLOW_NAME)
@@ -40,12 +60,10 @@ def train_flow():
         - if neither model is good enough, send a notification!
     """
 
-    min_date = EVALUATION_START_DATE
-    max_date = str(datetime.strptime(min_date, "%Y-%m-%d") + relativedelta(months=1)).split()[0]
 
     # Define your tasks
-    data = preprocess_new_data.submit(min_date, max_date)
-    old_mae = evaluate_production_model.submit(min_date, max_date,wait_for=[data])
+    # data = preprocess_new_data.submit(min_date, max_date)
+    # old_mae = evaluate_production_model.submit(min_date, max_date,wait_for=[data])
 
     batch_size = [128,256,512]#[64,128,256]
     learning_rate = [0.1, 0.09, 0.05] #[0.1, 0.01, 0.005, 0.001]
@@ -77,7 +95,7 @@ def train_flow():
     new_mae_result = new_mae.result()
 
     # new_mae_result
-    notify(old_mae, new_mae)
+
     # Do something with the results (e.g. compare them)
     if new_mae_result < old_mae_result:
             transition_model("Staging", "Production")
