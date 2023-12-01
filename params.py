@@ -1,6 +1,48 @@
 import os
 
 ##################  VARIABLES  #####################
+preproc_params_LSTM = {
+    "max_length":100,
+    "vector_size":50,
+    "window":5,
+    "embed":False,
+    "lower":True,
+    "split":" ",
+    "dtype":"float32",
+    "padding":"post",
+}
+
+model_params_LSTM = {
+    "lstm_units":50,
+    "lstm_activation":"tanh",
+    "loss":"binary_crossentropy",
+    "optimizer":"rmsprop",
+    "batch_size":64,
+    "patience":2,
+    "validation_split":0.2
+}
+
+
+preproc_params_GRU = {
+    "max_length":100,
+    "vector_size":50,
+    "window":5,
+    "lower":True,
+    "split":" ",
+    "dtype":"float32",
+    "padding":"post",
+}
+
+model_params_GRU = {
+    "gru_units":50,
+    "gru_activation":"tanh",
+    "loss":"binary_crossentropy",
+    "optimizer":"rmsprop",
+    "batch_size":64,
+    "patience":2,
+    "validation_split":0.2
+}
+
 
 ##################   MLFLOW    #####################
 MODEL_TARGET="mlflow"
