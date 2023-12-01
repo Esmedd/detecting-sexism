@@ -83,27 +83,6 @@ def train_flow():
             transition_model("Staging", "Production")
     # Actually launch your workflow
 
-# flow.py
-import requests
-
-@task
-def notify(old_mae, new_mae):
-    """
-    Notify about the performance
-    """
-    base_url = 'https://wagon-chat.herokuapp.com'
-    channel = '1412' # Change to your batch number
-    url = f"{base_url}/{channel}/messages"
-    author = 'Arnaudvb-testing' # Change this to your github nickname
-    if new_mae < old_mae and new_mae < 2.5:
-        content = f"🚀 New model replacing old in production with MAE: {new_mae} the Old MAE was: {old_mae}"
-    elif old_mae < 2.5:
-        content = f"✅ Old model still good enough: Old MAE: {old_mae} - New MAE: {new_mae}"
-    else:
-        content = f"🚨 No model good enough: Old MAE: {old_mae} - New MAE: {new_mae}"
-    data = dict(author=author, content=content)
-    response = requests.post(url, data=data)
-    response.raise_for_status()
 
 
 
