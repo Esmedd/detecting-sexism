@@ -17,6 +17,15 @@ def clean_data(data:pd.DataFrame=None):
     cleaned_df = clean_new(data)
     return cleaned_df
 
+# @task
+# def preprocess_new_data(new_data: pd.DataFrame, model_name:str, preproc_params:dict):
+#     X_preproc, to_ignore = preproc_test(new_data,new_data, model_name, preproc_params)
+#     return X_preproc
+
+@task
+def clean_data():
+    return clean_from_path()
+
 @task
 def preprocess_new_data(cleaned_df: pd.DataFrame, model_name:str, preproc_params:dict):
     X_train_preproc, X_test_preproc, y_train, y_test = preprocess(model_name=model_name,cleaned_df=cleaned_df ,preproc_params=preproc_params)
@@ -31,9 +40,15 @@ def evaluate_production_model(model_name:str,X_test_preproc, y_test, preproc_par
 def new_train(model_name, X_train_preproc, y_train, preproc_params,model_params):
     return train(model_name, X_train_preproc, y_train, preproc_params,model_params)
 
-@task
-def transition_model(current_stage: str, new_stage: str):
-    return mlflow_transition_model(current_stage,new_stage)
+
+
+# @task
+# def re_train(min_date: str, max_date: str, split_ratio: str, lr:float ,b:int,pat:int):
+#     return train(min_date,max_date,split_ratio, lr,b, pat)
+
+# @task
+# def transition_model(current_stage: str, new_stage: str):
+#     return mlflow_transition_model(current_stage,new_stage)
 
 
 @flow(name=PREFECT_FLOW_NAME)
@@ -48,6 +63,7 @@ def train_flow(model_name:str, preproc_params:dict, model_params:dict):
     """
 
 
+
     cleaned_df = clean_data()
     X_train_preproc, X_test_preproc, y_train, y_test = preprocess_new_data(cleaned_df, model_name, preproc_params)
     evaluate_production_model(model_name, X_test_preproc, y_test, preproc_params)
@@ -55,9 +71,6 @@ def train_flow(model_name:str, preproc_params:dict, model_params:dict):
     new_train(model_name, X_train_preproc, y_train, preproc_params,model_params)
 
 
-    # Define your tasks
-    # data = preprocess_new_data.submit(min_date, max_date)
-    # old_mae = evaluate_production_model.submit(min_date, max_date,wait_for=[data])
 
     # batch_size = [128,256,512]#[64,128,256]
     # learning_rate = [0.1, 0.09, 0.05] #[0.1, 0.01, 0.005, 0.001]
@@ -73,6 +86,7 @@ def train_flow(model_name:str, preproc_params:dict, model_params:dict):
     #             dico["new_mae"] = new_mae
     #             dico["params"] = f"{lr},{b},{pat}"
     #             l.append(dico)
+
     # Compute your results as actual python object
     # l2 = []
     # old_mae_result = old_mae.result()
