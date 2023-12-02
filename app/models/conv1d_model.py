@@ -84,9 +84,7 @@ def intialize_c1d(vocab_size, maxlen, embedding_size=100, loss='binary_crossentr
         model.add(Dropout(0.5))
         model.add(Dense(1, activation='sigmoid'))
 
-        precision = metrics.Precision()
-        recall = metrics.Recall()
-        model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy', precision, recall])
+        model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy', "Precision", "Recall"])
 
         print("✅ Model initialized and compiled")
 
@@ -134,7 +132,7 @@ def train_c1d_model(
         verbose=1
     )
 
-    print(f"✅ Model trained on {len(X)} rows with max val accuracy: {round(np.min(history.history['val_accuracy']), 2)}, max val recall: {round(np.min(history.history['val_recall']), 2)}")
+    # print(f"✅ Model trained on {len(X_train)} rows with max val accuracy: {round(np.min(history.history['val_accuracy']), 2)}, max val recall: {round(np.min(history.history['val_recall']), 2)}")
 
     return model, history
 
@@ -149,7 +147,7 @@ def evaluate_c1d_model(
     Evaluate trained model performance on the dataset
     """
 
-    print(f"\nEvaluating model on {len(X)} rows...")
+    print(f"\nEvaluating model on {len(X_test)} rows...")
 
     if model is None:
         print(f"\n❌ No model to evaluate")

@@ -1,7 +1,7 @@
 from app.packages.preprocessing.cleaning import *
 from app.packages.preprocessing.preprocessing_ML import *
 # from app.packages.preprocessing.translate import *
-
+import numpy as np
 ##################   Import Models ##################
 from app.models.multinomial_model import *
 from app.models.conv1d_model import *
@@ -143,14 +143,16 @@ def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_p
 
 
     if model_name == "conv1d":
-        X_train_preproc = X_train_preproc[0]
-        X_test_preproc = X_test_preproc[0]
 
-        train_vocab_size = X_train_preproc[1]
-        test_vocab_size = X_test_preproc[1]
 
-        train_max_length = X_train_preproc[2]
-        test_max_length = X_test_preproc[2]
+        X_train_preproc_conv = X_train_preproc[0][0]
+        # X_test_preproc = X_test_preproc[0]
+
+        train_vocab_size = int(X_train_preproc[0][1])
+        # test_vocab_size = X_test_preproc[1]
+
+        train_max_length = int(X_train_preproc[0][2])
+        # test_max_length = X_test_preproc[2]
 
     # Train model using `model.py`
     # model = load_model(model_name=model_name)
@@ -177,8 +179,8 @@ def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_p
         model, history = train_gru_model(model=model, X=X_train_preproc, y=y_train, batch_size=model_params["batch_size"], patience=model_params["patience"],validation_data=None,validation_split=model_params["validation_split"])
 
     if model_name == "conv1d":
-        model = intialize_c1d(vocab_size=train_vocab_size, maxlen=train_max_length, embedding_size=model_params["embedding_size"], loss=model_params["loss"], optimizer=model_params["optimizer"], globalmax=model_params["globalmax"])
-        model, history = train_c1d_model(model=model, X=X_train_preproc, y=y_train, batch_size=model_params["batch_size"], patience=model_params["patience"],validation_data=None,validation_split=model_params["validation_split"])
+        model = intialize_c1d(vocab_size=train_vocab_size, maxlen=train_max_length, embedding_size=model_params["embedding_size"], loss=model_params["loss"], optimizer=model_params["optimizer"], globalmax=model_params["globalmax"], complex=model_params["complex"])
+        model, history = train_c1d_model(model=model, X_train=X_train_preproc_conv, y_train=y_train, batch_size=model_params["batch_size"], patience=model_params["patience"],validation_data=None,validation_split=model_params["validation_split"])
     # if model_name == "BERT":
     #     BERT_preprocess()
 
@@ -218,6 +220,11 @@ def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:st
     """
     print("\n⭐️ Evaluate : Starting")
 
+    if model_name == "conv1d":
+        X_test_preproc_conv = X_test_preproc[0][0]
+        test_vocab_size = X_test_preproc[0][1]
+        test_max_length = X_test_preproc[0][2]
+
     model = load_model(model_name=model_name,stage=stage)
     assert model is not None
 
@@ -231,7 +238,7 @@ def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:st
     if model_name == "GRU":
         metrics = evaluate_gru_model(model,X_test_preproc, y_test, batch_size=batch_size)
     if model_name == "conv1d":
-        metrics = evaluate_c1d_model(model, X=X_test_preproc, y=y_test, batch_size=batch_size)
+        metrics = evaluate_c1d_model(model, X_test=X_test_preproc_conv, y_test=y_test, batch_size=batch_size)
     # if model_name == "BERT":
 
 
@@ -262,6 +269,8 @@ def pred(model_name:str,X_pred: pd.DataFrame, preproc_params:dict,stage:str="Pro
     print("\n🏁 Predict: Model has been load")
     X_proc = preproc_pred(X_pred, model_name, preproc_params)
 
+    if model_name == "conv1d":
+        X_proc = X_proc[0][0]
 
     y_pred = model.predict(X_proc)
 

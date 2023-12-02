@@ -249,26 +249,27 @@ def preproc_pred(X_pred:pd.DataFrame,model_name:str, params : dict=None):
         return LSTM_preprocess(X_pred)
 
     def Conv1d_preprocess(X_pred):
-        max_length = 100
+        max_length = params["max_length"]
         @simple_time_and_memory_tracker
         def preprocessing_cld(X : pd.DataFrame,maxlen=max_length):
             """ Preprocess X data for a Conv1D model
             Takes a single column df, X (as a list), as input. Returns the preprocessed X,
             the maxlen and the vocab size as output for use in initialize model function
             """
-            X_l = X.tolist()
-            X_word = [text_to_word_sequence(x) for x in X_l]
+            X_l = X.values.tolist()
+            X_word = [text_to_word_sequence("".join(x)) for x in X_l]
 
             tk = Tokenizer()
             tk.fit_on_texts(X_word)
             X_token = tk.texts_to_sequences(X_word)
             vocab_size = len(tk.word_index)
 
-            X_token_pad = pad_sequences(X_token, dtype=float, padding='post', maxlen=max_length)
+            X_token_pad = pad_sequences(X_token, dtype=params["dtype"], padding=params["padding"], maxlen=params["max_length"])
             return X_token_pad, vocab_size, max_length
         X_pred_pad, train_vocab_size, train_max_length = preprocessing_cld(X_pred)
         train = []
-        return train.append([X_pred_pad, train_vocab_size, train_max_length])
+        train.append([X_pred_pad, train_vocab_size, train_max_length])
+        return train
 
     def BERT_preprocess():
         pass
