@@ -82,7 +82,8 @@ def preprocess(model_name:str, cleaned_df:pd.DataFrame, preproc_params):
 
     You can refer to your model in preprocessing_ML.py to see all the variables you can mention
     """
-    # Call Cleaning function and return a df
+
+    print("\n⭐️ Pre-processing : Starting")
 
     # Split X and y and preprocess X
     X = cleaned_df.drop(target, axis=1)
@@ -138,6 +139,9 @@ def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_p
     We could go further and add to dictionnary the number of neruons per layer, etc.
     """
 
+    print("\n⭐️ Training : Starting")
+
+
     if model_name == "conv1d":
         X_train_preproc = X_train_preproc[0]
         X_test_preproc = X_test_preproc[0]
@@ -191,8 +195,12 @@ def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_p
     save_results(params=params, metrics=dict(val_loss=val_loss))
 
     # Save model weight on the hard drive (and optionally on GCS too!)
-    if preproc_params["embed"] == True:
-        model_name = f"{model_name}_embed"
+    try:
+        if preproc_params["embed"] == True:
+            model_name = f"{model_name}_embed"
+    except:
+        pass
+
     save_model(model_name=model_name,model=model)
 
     # The latest model should be moved to staging
@@ -207,7 +215,7 @@ def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:st
     Evaluate the performance of the latest production model on processed data
     Return MAE as a float
     """
-    print("\n⭐️ Use case: evaluate")
+    print("\n⭐️ Evaluate : Starting")
 
     model = load_model(model_name=model_name,stage=stage)
     assert model is not None
@@ -241,7 +249,7 @@ def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:st
     return metrics
 
 
-def pred(model_name:str,stage:str="Production",X_pred: pd.DataFrame = None) -> np.ndarray:
+def pred(model_name:str,X_pred: pd.DataFrame, preproc_params:dict,stage:str="Production") -> np.ndarray:
     """
     Make a prediction using the latest trained model
     """
@@ -250,7 +258,8 @@ def pred(model_name:str,stage:str="Production",X_pred: pd.DataFrame = None) -> n
 
     model = load_model(model_name=model_name, stage=stage)
     assert model is not None
-    X_proc, to_ignore = preproc_test(X_pred, X_pred, model_name, preproc_params_LSTM)
+    print("\n🏁 Predict: Model has been load")
+    X_proc = preproc_pred(X_pred, model_name, preproc_params)
 
 
     y_pred = model.predict(X_proc)

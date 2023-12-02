@@ -1,14 +1,10 @@
 from typing import Tuple
-from gensim.models import Word2Vec
 import numpy as np
 from tensorflow import keras
 from keras.callbacks import EarlyStopping
-from keras import metrics
-from tensorflow import keras
 from keras import Model, Sequential, regularizers, optimizers
 from keras.callbacks import EarlyStopping
 from keras.layers import *
-from keras import metrics
 
 
 ## !! We are using the same preprocessing method for this model as for the LSTM model so we import/use the functions
@@ -31,18 +27,14 @@ def initialize_gru(gru_units=50, gru_activation='tanh'):
     return model
 
 def compile_gru_model(model, loss='binary_crossentropy', optimizer='rmsprop'):
-    precision = metrics.Precision()
-    recall = metrics.Recall()
-    model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy', precision, recall])
+    model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy', "Precision", "Recall"])
 
     print("✅ Model compiled")
 
     return model
 
 def compile_gru_model_focal(model, loss='binary_focal_crossentropy', optimizer='rmsprop'):
-    precision = metrics.Precision()
-    recall = metrics.Recall()
-    model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy', precision, recall])
+    model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy', "Precision", "Recall"])
 
     print("✅ Model compiled")
 
@@ -77,7 +69,7 @@ def train_gru_model(
         verbose=1
     )
 
-    print(f"✅ Model trained on {len(X)} rows with max val accuracy: {round(np.max(history.history['val_accuracy']), 2)}, max val recall: {round(np.max(history.history['val_recall']), 2)}, max val precision: {round(np.max(history.history['val_precision']), 2)}")
+    #print(f"✅ Model trained on {len(X)} rows with max val accuracy: {round(np.max(history.history['val_accuracy']), 2)}, max val recall: {round(np.max(history.history['val_recall']), 2)}, max val precision: {round(np.max(history.history['val_precision']), 2)}")
 
     return model, history
 
@@ -109,7 +101,7 @@ def train_gru_model_focal(
         verbose=1
     )
 
-    print(f"✅ Model trained on {len(X)} rows with max val accuracy: {round(np.max(history.history['val_accuracy']), 2)}, max val recall: {round(np.max(history.history['val_recall_1']), 2)}, max val precision: {round(np.max(history.history['val_precision_1']), 2)}")
+    #print(f"✅ Model trained on {len(X)} rows with max val accuracy: {round(np.max(history.history['val_accuracy']), 2)}, max val recall: {round(np.max(history.history['val_recall_1']), 2)}, max val precision: {round(np.max(history.history['val_precision_1']), 2)}")
 
     return model, history
 
@@ -154,7 +146,7 @@ def evaluate_gru_model_focal(model, X, y, batch_size=64) -> Tuple:
 
     loss = metrics["loss"]
     accuracy = metrics["accuracy"]
-    recall = metrics["recall_1"]
+    recall = metrics["recall"]
 
     print(f"✅ Model evaluated with loss:{loss}, recall: {round(recall, 2)}, accuracy: {round(accuracy, 2)}")
 
