@@ -97,6 +97,45 @@ def preprocess(model_name:str, cleaned_df:pd.DataFrame, preproc_params):
     print("✅ preprocess() done \n")
     return X_train_preproc, X_test_preproc, y_train, y_test
 
+def preprocess_splitted(model_name:str, Train:pd.DataFrame, Test:pd.DataFrame, preproc_params):
+    """
+    >>> Initialize preprocessing depending on 'model_name'
+
+    model_name accepts these models :
+    "conv1d", "GRU", "LSTM", "multinomial", "BERT"
+
+    >>> 'params' argument takes a dictionnary to mention all parameters on your preprocessing
+    example preprocessing parameters for LSTM :
+    'params_LSTM = {
+    >>> "max_length":100,
+    >>> "vector_size":50,
+    >>> "window":5,
+    >>> "embed":False,
+    >>> "lower":True,
+    >>> "split":" ",
+    >>> "dtype":"float32",
+    >>> "padding":"post"}'
+
+    You can refer to your model in preprocessing_ML.py to see all the variables you can mention
+    """
+
+    print("\n⭐️ Pre-processing : Starting")
+
+    # Split X and y and preprocess X
+    X_train = Train.drop(target, axis=1)
+    y_train = Train[[target]]
+
+    X_test = Test.drop(target, axis=1)
+    y_test = Test[[target]]
+
+    if model_name == "conv1d":
+        X_train_preproc, X_test_preproc = preproc_test(X_train, X_test, model_name, preproc_params)
+    else:
+        X_train_preproc, X_test_preproc = preproc_test(X_train, X_test, model_name, preproc_params)
+
+    print("✅ preprocess() done \n")
+    return X_train_preproc, X_test_preproc, y_train, y_test
+
 
 
 
@@ -297,11 +336,18 @@ def pred(model_name:str,X_pred: pd.DataFrame,clean_params:dict,preproc_params:di
 #      stage: str = "Production") -> float
 
 
-def test_main(model_name:str,clean_param:dict, preproc_params:dict, model_params:dict, data:pd.DataFrame=None) :
+def main(model_name:str,clean_param:dict, preproc_params:dict, model_params:dict, data:pd.DataFrame=None) :
     if type(data) != pd.DataFrame :
         data = init_data(DB_URL)
     cleaned_df = clean_new(data, clean_param)
     X_train_preproc, X_test_preproc, y_train, y_test = preprocess(model_name=model_name,cleaned_df=cleaned_df ,preproc_params=preproc_params)
+    train(model_name, X_train_preproc, y_train, preproc_params,model_params)
+    metrics = evaluate(model_name, X_test_preproc, y_test,preproc_params)
+
+def main_splitted(model_name:str,clean_param:dict, preproc_params:dict, model_params:dict, Train:pd.DataFrame=None, Test:pd.DataFrame=None) :
+    Train = clean_new(Train, clean_param)
+    Test = clean_new(Test, clean_param)
+    X_train_preproc, X_test_preproc, y_train, y_test = preprocess_splitted(model_name=model_name,Train=Train,Test=Test,preproc_params=preproc_params)
     train(model_name, X_train_preproc, y_train, preproc_params,model_params)
     metrics = evaluate(model_name, X_test_preproc, y_test,preproc_params)
 
