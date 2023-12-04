@@ -1,4 +1,5 @@
 import pandas as pd
+import pickle
 from app.packages.utils import *
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
@@ -37,8 +38,10 @@ def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, param
             Takes vectorizing arguments "vector_size" and "window"
             Takes padding arguments dtype & padding
             """
+
+            model_name = "LSTM"
             word2vec = Word2Vec(sentences=X_train, vector_size=vector_size, window=window)
-            word2vec.save(f"./training_outputs/W2V/{params['max_length']}_{vector_size}_{window}_{padding}_W2V.wordvectors")
+            word2vec.save(f"./training_outputs/W2V/{model_name}_{params['max_length']}_{vector_size}_{window}_{padding}_W2V.wordvectors")
             def embed_sentence(wv, sentence):
                 return np.array([wv[i] for i in sentence if i in wv])
             wv = word2vec.wv
@@ -65,8 +68,11 @@ def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, param
         return X_train_padded, X_test_padded
 
     def Embed_LSTM_preproc(X_train:pd.DataFrame, X_test:pd.DataFrame, params:dict):
+        model_name = "Glove"
         tk = Tokenizer()
         tk.fit_on_texts(X_train.text)
+        with open(LOCAL_REGISTRY_PATH, 'tokenizer',f'{model_name}_{params["max_length"]}_{params["vector_size"]}_{params["window"]}' , 'wb') as tokenizer_file:
+            pickle.dump(tk, tokenizer_file)
         word_index = tk.word_index
         vocab_size = len(tk.word_index)
         print(f'There are {vocab_size} different words in your corpus')
@@ -123,6 +129,7 @@ def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, param
         return LSTM_preprocess(X_train, X_test)
 
     def Conv1d_preprocess(X_train, X_test):
+        model_name = "conv1d"
         max_length = params["max_length"]
         @simple_time_and_memory_tracker
         def preprocessing_cld(X : pd.DataFrame,maxlen=max_length):
@@ -135,6 +142,8 @@ def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, param
 
             tk = Tokenizer()
             tk.fit_on_texts(X_word)
+            with open(LOCAL_REGISTRY_PATH, 'tokenizer',f'{model_name}_{params["vector_size"]}_{params["window"]}' , 'wb') as tokenizer_file:
+                pickle.dump(tk, tokenizer_file)
             X_token = tk.texts_to_sequences(X_word)
             vocab_size = len(tk.word_index)
 
@@ -171,6 +180,7 @@ def preproc_pred(X_pred:pd.DataFrame,model_name:str, params : dict=None):
         max_length = params["max_length"]
         vector_size= params["vector_size"]
         window= params["window"]
+        model_name1 = "LSTM"
 
         def tokenize(df_column, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n', lower=True, split=' '):
             """ tokenize a column
@@ -189,7 +199,7 @@ def preproc_pred(X_pred:pd.DataFrame,model_name:str, params : dict=None):
             """
             Embed sentences using a trained Word2Vec model.
             """
-            word2vec_model = KeyedVectors.load(f"./training_outputs/W2V/{params['max_length']}_{params['vector_size']}_{params['window']}_{params['padding']}_W2V.wordvectors", mmap='r')
+            word2vec_model = KeyedVectors.load(f"./training_outputs/W2V/{model_name1}_{params['max_length']}_{params['vector_size']}_{params['window']}_{params['padding']}_W2V.wordvectors", mmap='r')
             def embed_sentence(wv, sentence):
                 return np.array([wv[i] for i in sentence if i in wv])
             # Embedding the sentences
@@ -204,8 +214,8 @@ def preproc_pred(X_pred:pd.DataFrame,model_name:str, params : dict=None):
         return X_pred_padded
 
     def Embed_LSTM_preproc(X_pred:pd.DataFrame, params:dict):
-        tk = Tokenizer()
-        tk.fit_on_texts(X_pred.text)
+        with open(LOCAL_REGISTRY_PATH, 'tokenizer',f'{model_name}_{params["vector_size"]}_{params["window"]}' , 'wb') as tokenizer_file:
+            tk = pickle.load(tokenizer_file)
         vocab_size = len(tk.word_index)
         print(f'There are {vocab_size} different words in your corpus')
         X_pred_token = tk.texts_to_sequences(X_pred.text)

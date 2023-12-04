@@ -223,17 +223,18 @@ def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:st
         test_vocab_size = X_test_preproc[0][1]
         test_max_length = X_test_preproc[0][2]
 
-    if preproc_params["embed"] == True:
-        model_name = f"{model_name}_embed"
+    try:
+        if preproc_params["embed"] == True:
+            model_name = f"{model_name}_embed"
+    except:
+        pass
     model = load_model(model_name=model_name,stage=stage)
     assert model is not None
 
 
     if model_name == "LSTM" and preproc_params["embed"] == False:
         metrics = evaluate_lstm_model(model, X=X_test_preproc, y=y_test, batch_size=batch_size )
-    if preproc_params["embed"] == True:
-        print(X_test_preproc)
-        print(X_test_preproc.shape)
+    if model_name == "LSTM_embed":
         metrics = evaluate_lstm_model(model, X=X_test_preproc, y=y_test, batch_size=batch_size )
     if model_name == "multinomial":
         pass
