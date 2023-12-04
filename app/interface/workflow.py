@@ -11,10 +11,10 @@ from app.packages.data_storage.registry import *
 from params import *
 
 @task
-def clean_data(data:pd.DataFrame=None):
-    if data == None:
+def clean_data(clean_param:dict, data:pd.DataFrame=None):
+    if type(data) != pd.DataFrame :
         data = init_data(DB_URL)
-    cleaned_df = clean_new(data)
+    cleaned_df = clean_new(data,clean_param)
     return cleaned_df
 
 # @task
@@ -22,9 +22,6 @@ def clean_data(data:pd.DataFrame=None):
 #     X_preproc, to_ignore = preproc_test(new_data,new_data, model_name, preproc_params)
 #     return X_preproc
 
-@task
-def clean_data():
-    return clean_from_path()
 
 @task
 def preprocess_new_data(cleaned_df: pd.DataFrame, model_name:str, preproc_params:dict):
@@ -41,18 +38,13 @@ def new_train(model_name, X_train_preproc, y_train, preproc_params,model_params)
     return train(model_name, X_train_preproc, y_train, preproc_params,model_params)
 
 
-
-# @task
-# def re_train(min_date: str, max_date: str, split_ratio: str, lr:float ,b:int,pat:int):
-#     return train(min_date,max_date,split_ratio, lr,b, pat)
-
-# @task
-# def transition_model(current_stage: str, new_stage: str):
-#     return mlflow_transition_model(current_stage,new_stage)
+@task
+def transition_model(current_stage: str, new_stage: str):
+    return mlflow_transition_model(current_stage,new_stage)
 
 
 @flow(name=PREFECT_FLOW_NAME)
-def train_flow(model_name:str, preproc_params:dict, model_params:dict):
+def train_flow(model_name:str,clean_params:dict , preproc_params:dict, model_params:dict, data:pd.DataFrame=None):
     """
     Build the Prefect workflow for the `taxifare` package. It should:
         - preprocess 1 month of new data, starting from EVALUATION_START_DATE
@@ -64,13 +56,21 @@ def train_flow(model_name:str, preproc_params:dict, model_params:dict):
 
 
 
-    cleaned_df = clean_data()
-    X_train_preproc, X_test_preproc, y_train, y_test = preprocess_new_data(cleaned_df, model_name, preproc_params)
-    evaluate_production_model(model_name, X_test_preproc, y_test, preproc_params)
+    cleaned_df = clean_data.submit(clean_params, data)
+    X_train_preproc, X_test_preproc, y_train, y_test = preprocess.submit(model_name=model_name,cleaned_df=cleaned_df ,preproc_params=preproc_params, wait_for=[cleaned_df])
+    metrics = evaluate_production_model.submit(model_name, X_test_preproc, y_test, preproc_params, wait_for=[X_train_preproc])
 
-    new_train(model_name, X_train_preproc, y_train, preproc_params,model_params)
+    history = new_train.submit(model_name, X_train_preproc, y_train, preproc_params,model_params, wait_for=[X_train_preproc])
 
+    new_acc = round(np.min((history.result()).history['val_recall']), 2)
+    old_acc = round((metrics.result())["recall"], 2)
 
+    print(f"🏁 new_acc: {new_acc} // old_acc: {old_acc}")
+    if new_acc > old_acc:
+        transition_model("Staging", "Production")
+        print("⭐️ New model has been set on Production")
+
+    return
 
     # batch_size = [128,256,512]#[64,128,256]
     # learning_rate = [0.1, 0.09, 0.05] #[0.1, 0.01, 0.005, 0.001]
@@ -105,8 +105,7 @@ def train_flow(model_name:str, preproc_params:dict, model_params:dict):
     # new_mae_result
 
     # Do something with the results (e.g. compare them)
-    if new_mae_result < old_mae_result:
-            transition_model("Staging", "Production")
+
     # Actually launch your workflow
 
 

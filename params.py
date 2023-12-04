@@ -18,9 +18,32 @@ preproc_params_LSTM = {
     "split":" ",
     "dtype":"float32",
     "padding":"post",
+    "bidirectional":False
 }
 
 model_params_LSTM = {
+    "lstm_units":50,
+    "lstm_activation":"tanh",
+    "loss":"binary_crossentropy",
+    "optimizer":"rmsprop",
+    "batch_size":64,
+    "patience":2,
+    "validation_split":0.2
+}
+
+preproc_params_LSTM_bidir = {
+    "max_length":100,
+    "vector_size":50,
+    "window":5,
+    "embed":False,
+    "lower":True,
+    "split":" ",
+    "dtype":"float32",
+    "padding":"post",
+    "bidirectional":True
+}
+
+model_params_LSTM_bidir = {
     "lstm_units":50,
     "lstm_activation":"tanh",
     "loss":"binary_crossentropy",
@@ -81,6 +104,7 @@ preproc_params_LSTM_embed = {
     "split":" ",
     "dtype":"float32",
     "padding":"post",
+    "bidirectional":False
 }
 
 model_params_LSTM_embed = {
@@ -100,8 +124,8 @@ MLFLOW_EXPERIMENT="You_are_not_sexist-experiment"
 MLFLOW_MODEL_NAME="You_are_not_sexist-model"
 
 ##################   Prefect    ####################
-PREFECT_FLOW_NAME = "you_are_not_sexist"
-PREFECT_LOG_LEVEL = "WARNING"
+PREFECT_FLOW_NAME="you-are-not-sexist"
+PREFECT_LOG_LEVEL="WARNING"
 
 ##################     GCP     #####################
 GCP_PROJECT = "youre-not-sexist" #os.environ.get("GCP_PROJECT")

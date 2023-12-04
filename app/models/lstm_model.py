@@ -72,7 +72,7 @@ def embed_preprocessing():
 
 
 
-def initialize_lstm(lstm_units=50, lstm_activation='tanh',max_length:int=100, embedding:bool=False, word_index=None):
+def initialize_lstm(lstm_units=50, lstm_activation='tanh',max_length:int=100, embedding:bool=False, bidirectional:bool=False, word_index=None):
 
     if embedding == True:
         model_wiki = gensim.downloader.load('glove-twitter-200') # loads dataset (Glove Twitter, 100dimensions)
@@ -90,6 +90,10 @@ def initialize_lstm(lstm_units=50, lstm_activation='tanh',max_length:int=100, em
         model.add(Masking())
     elif embedding == True:
         model.add(Embedding(len(word_index) + 1, embedding_dim, weights=[embedding_matrix], input_length=max_length, trainable=False))
+    if bidirectional == False:
+        model.add(LSTM(units=lstm_units, activation=lstm_activation, return_sequences=True))
+    elif bidirectional == True:
+        model.add(Bidirectional(LSTM(units=lstm_units, activation=lstm_activation, return_sequences=True)))
     model.add(LSTM(units=lstm_units, activation=lstm_activation, return_sequences=True))
     model.add(Dropout(0.3))
     model.add(LSTM(50, activation=lstm_activation))

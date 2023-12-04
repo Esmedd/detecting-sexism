@@ -160,7 +160,7 @@ def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_p
     #     pass
     if model_name == "LSTM":
         if preproc_params["embed"] == True:
-            model = initialize_lstm(lstm_units=model_params["lstm_units"],lstm_activation=model_params["lstm_activation"],max_length=preproc_params["max_length"], embedding=preproc_params["embed"], word_index=train_word_index)
+            model = initialize_lstm(lstm_units=model_params["lstm_units"],lstm_activation=model_params["lstm_activation"],max_length=preproc_params["max_length"], embedding=preproc_params["embed"], bidirectional=preproc_params["bidirectional"], word_index=train_word_index)
             model = compile_lstm_model(model=model, loss=model_params["loss"], optimizer=model_params['optimizer'])
             model, history = train_lstm_model(model=model, X=X_train_preproc_emb, y=y_train, batch_size=model_params["batch_size"], patience=model_params["patience"],validation_data=None,validation_split=model_params["validation_split"])
 
@@ -196,8 +196,10 @@ def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_p
 
     # Save model weight on the hard drive (and optionally on GCS too!)
     try:
-        if preproc_params["embed"] == True:
-            model_name = f"{model_name}_embed"
+        if preproc_params["embed"] == True and preproc_params["bidirectional"]== False:
+            model_name = f"{model_name}_GLOVE"
+        if preproc_params["embed"] == True and preproc_params["bidirectional"]== True:
+            model_name = f"{model_name}_GLOVE_BIDIR"
     except:
         pass
 
@@ -208,6 +210,7 @@ def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_p
         mlflow_transition_model(model_name=model_name,current_stage="None", new_stage="Staging")
 
     print("✅ train() done \n")
+    return history
 
 @mlflow_run
 def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:str="Staging",batch_size:int=32) -> float:
