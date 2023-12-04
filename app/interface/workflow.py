@@ -26,6 +26,10 @@ def clean_data(clean_param:dict, data:pd.DataFrame=None):
 @task
 def preprocess_new_data(cleaned_df: pd.DataFrame, model_name:str, preproc_params:dict):
     X_train_preproc, X_test_preproc, y_train, y_test = preprocess(model_name=model_name,cleaned_df=cleaned_df ,preproc_params=preproc_params)
+    print("X_train",X_train_preproc)
+    print("X_test",X_test_preproc)
+    print("y_train",y_train)
+    print("y_test",y_test)
     return X_train_preproc, X_test_preproc, y_train, y_test
 
 @task
@@ -61,10 +65,11 @@ def train_flow(model_name:str,clean_params:dict , preproc_params:dict, model_par
 
 
     cleaned_df = clean_data.submit(clean_params, data)
-    X_train_preproc, X_test_preproc, y_train, y_test = preprocess_new_data.submit(model_name=model_name,cleaned_df=cleaned_df ,preproc_params=preproc_params, wait_for=[cleaned_df])
-    metrics = evaluate_production_model.submit(model_name, X_test_preproc, y_test, preproc_params, wait_for=[X_train_preproc])
+    X_train_preproc, X_test_preproc, y_train, y_test = preprocess_new_data(model_name=model_name,cleaned_df=cleaned_df ,preproc_params=preproc_params)
 
-    history = new_train.submit(model_name, X_train_preproc, y_train, preproc_params,model_params, wait_for=[X_train_preproc])
+    metrics = evaluate_production_model.submit(model_name, X_test_preproc, y_test, preproc_params)
+
+    history = new_train.submit(model_name, X_train_preproc, y_train, preproc_params,model_params)
 
     new_acc = round(np.min((history.result()).history['val_recall']), 2)
     old_acc = round((metrics.result())["recall"], 2)
@@ -88,13 +93,12 @@ def train_flow_splitted(model_name:str,clean_params:dict , preproc_params:dict, 
     """
 
 
-
     Train = clean_data.submit(clean_params, Train)
     Test = Test = clean_data.submit(clean_param, Test)
     X_train_preproc, X_test_preproc, y_train, y_test = preprocess_new_data_splitted.submit(model_name=model_name,Train=Train, Test=Test ,preproc_params=preproc_params, wait_for=[cleaned_df])
-    metrics = evaluate_production_model.submit(model_name, X_test_preproc, y_test, preproc_params, wait_for=[X_train_preproc])
+    metrics = evaluate_production_model.submit(model_name, X_test_preproc, y_test, preproc_params)
 
-    history = new_train.submit(model_name, X_train_preproc, y_train, preproc_params,model_params, wait_for=[X_train_preproc])
+    history = new_train.submit(model_name, X_train_preproc, y_train, preproc_params,model_params)
 
     new_acc = round(np.min((history.result()).history['val_recall']), 2)
     old_acc = round((metrics.result())["recall"], 2)

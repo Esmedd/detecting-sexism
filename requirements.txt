@@ -1,7 +1,7 @@
-tensorflow-macos==2.10.0; sys_platform == 'darwin' and 'ARM' in platform_version # Mac M-chips
-tensorflow==2.10.0; sys_platform == 'darwin' and 'ARM' not in platform_version # Mac Intel chips
-tensorflow==2.10.0; sys_platform != 'darwin' # Windows & Ubuntu Intel chips
-
+tensorflow-macos==2.14.0; sys_platform == 'darwin' and 'ARM' in platform_version # Mac M-chips
+tensorflow==2.14.0; sys_platform == 'darwin' and 'ARM' not in platform_version # Mac Intel chips
+tensorflow==2.14.0; sys_platform != 'darwin' # Windows & Ubuntu Intel chips
+tf-models-official==2.14.0
 decorator
 emoji==2.8.0
 fastapi
@@ -13,7 +13,7 @@ bert-tensorflow
 
 #googletrans==4.0.0-rc1
 httpx
-keras==2.10.0
+keras==2.14.0
 Keras-Preprocessing==1.1.2
 matplotlib==3.8.2
 matplotlib-inline==0.1.6
