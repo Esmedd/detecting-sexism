@@ -26,8 +26,16 @@ def clean_data(clean_param:dict, data:pd.DataFrame=None):
 @task
 def preprocess_new_data(cleaned_df: pd.DataFrame, model_name:str, preproc_params:dict):
     X_train_preproc, X_test_preproc, y_train, y_test = preprocess(model_name=model_name,cleaned_df=cleaned_df ,preproc_params=preproc_params)
+    print("X_train",X_train_preproc)
+    print("X_test",X_test_preproc)
+    print("y_train",y_train)
+    print("y_test",y_test)
     return X_train_preproc, X_test_preproc, y_train, y_test
 
+@task
+def preprocess_new_data_splitted(Train: pd.DataFrame,Test: pd.DataFrame, model_name:str, preproc_params:dict):
+    X_train_preproc, X_test_preproc, y_train, y_test = preprocess_splitted(model_name=model_name,Train=Train, Test=Test,preproc_params=preproc_params)
+    return X_train_preproc, X_test_preproc, y_train, y_test
 
 @task
 def evaluate_production_model(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:str="Production",batch_size:int=32):
@@ -57,10 +65,40 @@ def train_flow(model_name:str,clean_params:dict , preproc_params:dict, model_par
 
 
     cleaned_df = clean_data.submit(clean_params, data)
-    X_train_preproc, X_test_preproc, y_train, y_test = preprocess.submit(model_name=model_name,cleaned_df=cleaned_df ,preproc_params=preproc_params, wait_for=[cleaned_df])
-    metrics = evaluate_production_model.submit(model_name, X_test_preproc, y_test, preproc_params, wait_for=[X_train_preproc])
+    X_train_preproc, X_test_preproc, y_train, y_test = preprocess_new_data(model_name=model_name,cleaned_df=cleaned_df ,preproc_params=preproc_params)
 
-    history = new_train.submit(model_name, X_train_preproc, y_train, preproc_params,model_params, wait_for=[X_train_preproc])
+    metrics = evaluate_production_model.submit(model_name, X_test_preproc, y_test, preproc_params)
+
+    history = new_train.submit(model_name, X_train_preproc, y_train, preproc_params,model_params)
+
+    new_acc = round(np.min((history.result()).history['val_recall']), 2)
+    old_acc = round((metrics.result())["recall"], 2)
+
+    print(f"🏁 new_acc: {new_acc} // old_acc: {old_acc}")
+    if new_acc > old_acc:
+        transition_model("Staging", "Production")
+        print("⭐️ New model has been set on Production")
+
+    return
+
+@flow(name=PREFECT_FLOW_NAME)
+def train_flow_splitted(model_name:str,clean_params:dict , preproc_params:dict, model_params:dict, Train:pd.DataFrame=None,Test:pd.DataFrame=None ):
+    """
+    Build the Prefect workflow for the `taxifare` package. It should:
+        - preprocess 1 month of new data, starting from EVALUATION_START_DATE
+        - compute `old_mae` by evaluating the current production model in this new month period
+        - compute `new_mae` by re-training, then evaluating the current production model on this new month period
+        - if the new one is better than the old one, replace the current production model with the new one
+        - if neither model is good enough, send a notification!
+    """
+
+
+    Train = clean_data.submit(clean_params, Train)
+    Test = Test = clean_data.submit(clean_param, Test)
+    X_train_preproc, X_test_preproc, y_train, y_test = preprocess_new_data_splitted.submit(model_name=model_name,Train=Train, Test=Test ,preproc_params=preproc_params, wait_for=[cleaned_df])
+    metrics = evaluate_production_model.submit(model_name, X_test_preproc, y_test, preproc_params)
+
+    history = new_train.submit(model_name, X_train_preproc, y_train, preproc_params,model_params)
 
     new_acc = round(np.min((history.result()).history['val_recall']), 2)
     old_acc = round((metrics.result())["recall"], 2)
