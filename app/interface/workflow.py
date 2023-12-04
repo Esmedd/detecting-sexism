@@ -94,8 +94,9 @@ def train_flow_splitted(model_name:str,clean_params:dict , preproc_params:dict, 
 
 
     Train = clean_data.submit(clean_params, Train)
-    Test = Test = clean_data.submit(clean_param, Test)
-    X_train_preproc, X_test_preproc, y_train, y_test = preprocess_new_data_splitted.submit(model_name=model_name,Train=Train, Test=Test ,preproc_params=preproc_params, wait_for=[cleaned_df])
+    Test = Test = clean_data.submit(clean_params, Test)
+    preproc= preprocess_new_data_splitted.submit(model_name=model_name,Train=Train, Test=Test ,preproc_params=preproc_params, wait_for=[Train,Test])
+    X_train_preproc, X_test_preproc, y_train, y_test=preproc.result()
     metrics = evaluate_production_model.submit(model_name, X_test_preproc, y_test, preproc_params)
 
     history = new_train.submit(model_name, X_train_preproc, y_train, preproc_params,model_params)
