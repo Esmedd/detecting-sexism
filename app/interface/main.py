@@ -266,8 +266,9 @@ def pred(model_name:str,X_pred: pd.DataFrame, preproc_params:dict,stage:str="Pro
     """
 
     print("\n⭐️ Use case: predict")
+    X_clean = clean_new(X_pred)
 
-    X_proc = preproc_pred(X_pred, model_name, preproc_params)
+    X_proc = preproc_pred(X_clean, model_name, preproc_params)
 
     if preproc_params["embed"] == True:
         model_name = f"{model_name}_embed"
