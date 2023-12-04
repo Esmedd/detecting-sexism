@@ -56,10 +56,9 @@ def clean_from_path():
     return df
     # Save the cleaned DataFrame locally and in Big Query
 
-def clean_new(data:pd.DataFrame):
-    df = all_in_one(data,text_col,selected_col,concatenate,url_label, usr_label)
+def clean_new(data:pd.DataFrame, clean_param:dict):
+    df = all_in_one(data,"text",["text", "sexist_binary"],concatenate=clean_param["concatenate"],url_label=clean_param["url_label"], usr_label=clean_param["usr_label"], func_to_exec=clean_param["functions"])
     return df
-
 
 def preprocess(model_name:str, cleaned_df:pd.DataFrame, preproc_params):
     """
@@ -147,7 +146,7 @@ def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_p
         train_vocab_size = X_train_preproc[0][1]
         train_max_length = X_train_preproc[0][2]
 
-    if preproc_params["embed"] == True:
+    if model_name == "LSTM" and preproc_params["embed"] == True:
         X_train_preproc_emb = X_train_preproc[0][0]
         train_word_index = X_train_preproc[0][1]
         train_vocab_size = X_train_preproc[0][2]
@@ -260,13 +259,13 @@ def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:st
     return metrics
 
 @simple_time_and_memory_tracker
-def pred(model_name:str,X_pred: pd.DataFrame, preproc_params:dict,stage:str="Production") -> np.ndarray:
+def pred(model_name:str,X_pred: pd.DataFrame,clean_params:dict,preproc_params:dict,stage:str="Production") -> np.ndarray:
     """
     Make a prediction using the latest trained model
     """
 
     print("\n⭐️ Use case: predict")
-    X_clean = all_in_one(X_pred,text_col,selected_cols=["text"])
+    X_clean = all_in_one(X_pred,"text",selected_cols=["text"],concatenate=clean_param["concatenate"],url_label=clean_param["url_label"], usr_label=clean_param["usr_label"], func_to_exec=clean_param["functions"])
 
     try:
         if preproc_params["embed"] == True:
@@ -294,10 +293,10 @@ def pred(model_name:str,X_pred: pd.DataFrame, preproc_params:dict,stage:str="Pro
 #      stage: str = "Production") -> float
 
 
-def test_main(model_name:str, preproc_params:dict, model_params:dict, data:pd.DataFrame=None) :
-    if data == None:
+def test_main(model_name:str,clean_param:dict, preproc_params:dict, model_params:dict, data:pd.DataFrame=None) :
+    if type(data) != pd.DataFrame :
         data = init_data(DB_URL)
-    cleaned_df = clean_new(data)
+    cleaned_df = clean_new(data, clean_param)
     X_train_preproc, X_test_preproc, y_train, y_test = preprocess(model_name=model_name,cleaned_df=cleaned_df ,preproc_params=preproc_params)
     train(model_name, X_train_preproc, y_train, preproc_params,model_params)
     metrics = evaluate(model_name, X_test_preproc, y_test,preproc_params)

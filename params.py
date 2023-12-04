@@ -2,6 +2,13 @@ import os
 from tensorflow.keras.optimizers import Adam
 
 ##################  VARIABLES  #####################
+clean_param = {
+    "concatenate":False,
+    "url_label":"[URL]",
+    "usr_label":"[USERNAME]",
+    "functions":[True,True,True,True,True,True,True,True,True,True,True]
+}
+
 preproc_params_LSTM = {
     "max_length":100,
     "vector_size":50,
