@@ -1,7 +1,7 @@
 from app.packages.preprocessing.cleaning import *
 from app.packages.preprocessing.preprocessing_ML import *
 # from app.packages.preprocessing.translate import *
-
+import numpy as np
 ##################   Import Models ##################
 from app.models.multinomial_model import *
 from app.models.conv1d_model import *
@@ -82,7 +82,8 @@ def preprocess(model_name:str, cleaned_df:pd.DataFrame, preproc_params):
 
     You can refer to your model in preprocessing_ML.py to see all the variables you can mention
     """
-    # Call Cleaning function and return a df
+
+    print("\n⭐️ Pre-processing : Starting")
 
     # Split X and y and preprocess X
     X = cleaned_df.drop(target, axis=1)
@@ -138,15 +139,20 @@ def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_p
     We could go further and add to dictionnary the number of neruons per layer, etc.
     """
 
+    print("\n⭐️ Training : Starting")
+
+
     if model_name == "conv1d":
-        X_train_preproc = X_train_preproc[0]
-        X_test_preproc = X_test_preproc[0]
+        X_train_preproc_conv = X_train_preproc[0][0]
+        train_vocab_size = X_train_preproc[0][1]
+        train_max_length = X_train_preproc[0][2]
 
-        train_vocab_size = X_train_preproc[1]
-        test_vocab_size = X_test_preproc[1]
+    if preproc_params["embed"] == True:
+        X_train_preproc_emb = X_train_preproc[0][0]
+        train_word_index = X_train_preproc[0][1]
+        train_vocab_size = X_train_preproc[0][2]
 
-        train_max_length = X_train_preproc[2]
-        test_max_length = X_test_preproc[2]
+
 
     # Train model using `model.py`
     # model = load_model(model_name=model_name)
@@ -155,10 +161,9 @@ def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_p
     #     pass
     if model_name == "LSTM":
         if preproc_params["embed"] == True:
-            pass
-            model = initialize_lstm(lstm_units=model_params["lstm_units"],lstm_activation=model_params["lstm_activation"], embedding=preproc_params["embed"])
+            model = initialize_lstm(lstm_units=model_params["lstm_units"],lstm_activation=model_params["lstm_activation"],max_length=preproc_params["max_length"], embedding=preproc_params["embed"], word_index=train_word_index)
             model = compile_lstm_model(model=model, loss=model_params["loss"], optimizer=model_params['optimizer'])
-            model, history = train_lstm_model(model=model, X=X_train_preproc, y=y_train, batch_size=model_params["batch_size"], patience=model_params["patience"],validation_data=None,validation_split=model_params["validation_split"])
+            model, history = train_lstm_model(model=model, X=X_train_preproc_emb, y=y_train, batch_size=model_params["batch_size"], patience=model_params["patience"],validation_data=None,validation_split=model_params["validation_split"])
 
         else:
             model = initialize_lstm(lstm_units=model_params["lstm_units"],lstm_activation=model_params["lstm_activation"], embedding=preproc_params["embed"])
@@ -173,8 +178,8 @@ def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_p
         model, history = train_gru_model(model=model, X=X_train_preproc, y=y_train, batch_size=model_params["batch_size"], patience=model_params["patience"],validation_data=None,validation_split=model_params["validation_split"])
 
     if model_name == "conv1d":
-        model = intialize_c1d(vocab_size=train_vocab_size, maxlen=train_max_length, embedding_size=model_params["embedding_size"], loss=model_params["loss"], optimizer=model_params["optimizer"], globalmax=model_params["globalmax"])
-        model, history = train_c1d_model(model=model, X=X_train_preproc, y=y_train, batch_size=model_params["batch_size"], patience=model_params["patience"],validation_data=None,validation_split=model_params["validation_split"])
+        model = intialize_c1d(vocab_size=train_vocab_size, maxlen=train_max_length, embedding_size=model_params["embedding_size"], loss=model_params["loss"], optimizer=model_params["optimizer"], globalmax=model_params["globalmax"], complex=model_params["complex"])
+        model, history = train_c1d_model(model=model, X_train=X_train_preproc_conv, y_train=y_train, batch_size=model_params["batch_size"], patience=model_params["patience"],validation_data=None,validation_split=model_params["validation_split"])
     # if model_name == "BERT":
     #     BERT_preprocess()
 
@@ -191,8 +196,12 @@ def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_p
     save_results(params=params, metrics=dict(val_loss=val_loss))
 
     # Save model weight on the hard drive (and optionally on GCS too!)
-    if preproc_params["embed"] == True:
-        model_name = f"{model_name}_embed"
+    try:
+        if preproc_params["embed"] == True:
+            model_name = f"{model_name}_embed"
+    except:
+        pass
+
     save_model(model_name=model_name,model=model)
 
     # The latest model should be moved to staging
@@ -208,22 +217,31 @@ def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:st
     Evaluate the performance of the latest production model on processed data
     Return MAE as a float
     """
-    print("\n⭐️ Use case: evaluate")
+    print("\n⭐️ Evaluate : Starting")
 
+    if model_name == "conv1d":
+        X_test_preproc_conv = X_test_preproc[0][0]
+        test_vocab_size = X_test_preproc[0][1]
+        test_max_length = X_test_preproc[0][2]
+
+    if preproc_params["embed"] == True:
+        model_name = f"{model_name}_embed"
     model = load_model(model_name=model_name,stage=stage)
     assert model is not None
 
 
-    if model_name == "LSTM":
+    if model_name == "LSTM" and preproc_params["embed"] == False:
         metrics = evaluate_lstm_model(model, X=X_test_preproc, y=y_test, batch_size=batch_size )
-    if model_name == "LSTM_embed":
+    if preproc_params["embed"] == True:
+        print(X_test_preproc)
+        print(X_test_preproc.shape)
         metrics = evaluate_lstm_model(model, X=X_test_preproc, y=y_test, batch_size=batch_size )
     if model_name == "multinomial":
         pass
     if model_name == "GRU":
         metrics = evaluate_gru_model(model,X_test_preproc, y_test, batch_size=batch_size)
     if model_name == "conv1d":
-        metrics = evaluate_c1d_model(model, X=X_test_preproc, y=y_test, batch_size=batch_size)
+        metrics = evaluate_c1d_model(model, X_test=X_test_preproc_conv, y_test=y_test, batch_size=batch_size)
     # if model_name == "BERT":
 
 
@@ -242,17 +260,25 @@ def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:st
     return metrics
 
 
-def pred(model_name:str,stage:str="Production",X_pred: pd.DataFrame = None) -> np.ndarray:
+def pred(model_name:str,X_pred: pd.DataFrame, preproc_params:dict,stage:str="Production") -> np.ndarray:
     """
     Make a prediction using the latest trained model
     """
 
     print("\n⭐️ Use case: predict")
 
+    X_proc = preproc_pred(X_pred, model_name, preproc_params)
+
+    if preproc_params["embed"] == True:
+        model_name = f"{model_name}_embed"
+
     model = load_model(model_name=model_name, stage=stage)
     assert model is not None
-    X_proc, to_ignore = preproc_test(X_pred, X_pred, model_name, preproc_params_LSTM)
 
+    print("\n🏁 Predict: Model has been load")
+
+    if model_name == "conv1d":
+        X_proc = X_proc[0][0]
 
     y_pred = model.predict(X_proc)
 

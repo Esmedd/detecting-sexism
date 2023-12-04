@@ -15,9 +15,9 @@ model_names = ["conv1d", "GRU", "LSTM", "multinomial", "BERT"]
 
 def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, params : dict=None):
     def LSTM_preprocess(X_train, X_test):
-        max_length = 100
-        vector_size=50
-        window=5
+        max_length = params["max_length"]
+        vector_size= params["vector_size"]
+        window= params["window"]
 
         def tokenize(df_column, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n', lower=True, split=' '):
             """ tokenize a column
@@ -67,6 +67,7 @@ def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, param
     def Embed_LSTM_preproc(X_train:pd.DataFrame, X_test:pd.DataFrame, params:dict):
         tk = Tokenizer()
         tk.fit_on_texts(X_train.text)
+        word_index = tk.word_index
         vocab_size = len(tk.word_index)
         print(f'There are {vocab_size} different words in your corpus')
         X_train_token = tk.texts_to_sequences(X_train.text)
@@ -75,7 +76,9 @@ def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, param
         X_test_truncated = [sentence[:params["max_length"]] for sentence in X_test_token]
         X_train_pad = pad_sequences(X_train_truncated, maxlen=params["max_length"])
         X_test_pad = pad_sequences(X_test_truncated, maxlen=params["max_length"])
-        return X_train_pad, X_test_pad
+        train = []
+        train.append([X_train_pad,word_index, vocab_size])
+        return train, X_test_pad
     def Multinomial_preprocess(X_train, X_test):
 
         @simple_time_and_memory_tracker
@@ -120,28 +123,30 @@ def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, param
         return LSTM_preprocess(X_train, X_test)
 
     def Conv1d_preprocess(X_train, X_test):
-        max_length = 100
+        max_length = params["max_length"]
         @simple_time_and_memory_tracker
         def preprocessing_cld(X : pd.DataFrame,maxlen=max_length):
             """ Preprocess X data for a Conv1D model
             Takes a single column df, X (as a list), as input. Returns the preprocessed X,
             the maxlen and the vocab size as output for use in initialize model function
             """
-            X_l = X.tolist()
-            X_word = [text_to_word_sequence(x) for x in X_l]
+            X_l = X.values.tolist()
+            X_word = [text_to_word_sequence("".join(x)) for x in X_l]
 
             tk = Tokenizer()
             tk.fit_on_texts(X_word)
             X_token = tk.texts_to_sequences(X_word)
             vocab_size = len(tk.word_index)
 
-            X_token_pad = pad_sequences(X_token, dtype=float, padding='post', maxlen=max_length)
+            X_token_pad = pad_sequences(X_token, dtype=params["dtype"], padding=params["padding"], maxlen=params["max_length"])
             return X_token_pad, vocab_size, max_length
         X_train_pad, train_vocab_size, train_max_length = preprocessing_cld(X_train)
         X_test_pad, test_vocab_size, test_max_length = preprocessing_cld(X_test)
         train = []
         test = []
-        return train.append([X_train_pad, train_vocab_size, train_max_length]) , test.append([X_test_pad, test_vocab_size, test_max_length])
+        train.append([X_train_pad, train_vocab_size, train_max_length])
+        test.append([X_test_pad, test_vocab_size, test_max_length])
+        return  train, test
 
     def BERT_preprocess():
         pass
@@ -163,9 +168,9 @@ def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, param
 
 def preproc_pred(X_pred:pd.DataFrame,model_name:str, params : dict=None):
     def LSTM_preprocess(X_pred, ):
-        max_length = 100
-        vector_size=50
-        window=5
+        max_length = params["max_length"]
+        vector_size= params["vector_size"]
+        window= params["window"]
 
         def tokenize(df_column, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n', lower=True, split=' '):
             """ tokenize a column
@@ -184,18 +189,17 @@ def preproc_pred(X_pred:pd.DataFrame,model_name:str, params : dict=None):
             """
             Embed sentences using a trained Word2Vec model.
             """
-
-            word2vec_model = KeyedVectors.load("word2vec.wordvectors", mmap='r')
+            word2vec_model = KeyedVectors.load(f"./training_outputs/W2V/{params['max_length']}_{params['vector_size']}_{params['window']}_{params['padding']}_W2V.wordvectors", mmap='r')
             def embed_sentence(wv, sentence):
                 return np.array([wv[i] for i in sentence if i in wv])
             # Embedding the sentences
             wv = word2vec_model.wv
             embedded_X = [embed_sentence(wv, s) for s in X_pred]
-            return pad_sequences(embedded_X, maxlen=max_length, dtype=dtype, padding=padding)
+            return pad_sequences(embedded_X, maxlen=max_length, dtype=dtype, padding=params['padding'])
 
         X_pred_token = tokenize(X_pred.text)
         X_pred_truncated = [sentence[:max_length] for sentence in X_pred_token]
-        X_pred_padded = w2v_embed(X_pred_truncated, vector_size=vector_size, window=window)
+        X_pred_padded = w2v_embed(X_pred_truncated, max_length=params["max_length"], dtype=params["dtype"],padding=params['padding'])
         print(f"Shape of X_pred_padded in preproc: {X_pred_padded.shape}")
         return X_pred_padded
 
@@ -245,29 +249,30 @@ def preproc_pred(X_pred:pd.DataFrame,model_name:str, params : dict=None):
             return X_pred_token
         return preprocessing(X_pred,stop_words=False, sent_tokenize=False, lemmatize=True)
     def GRU_preprocess(X_pred, ):
-        return LSTM_preprocess(X_pred, )
+        return LSTM_preprocess(X_pred)
 
     def Conv1d_preprocess(X_pred):
-        max_length = 100
+        max_length = params["max_length"]
         @simple_time_and_memory_tracker
         def preprocessing_cld(X : pd.DataFrame,maxlen=max_length):
             """ Preprocess X data for a Conv1D model
             Takes a single column df, X (as a list), as input. Returns the preprocessed X,
             the maxlen and the vocab size as output for use in initialize model function
             """
-            X_l = X.tolist()
-            X_word = [text_to_word_sequence(x) for x in X_l]
+            X_l = X.values.tolist()
+            X_word = [text_to_word_sequence("".join(x)) for x in X_l]
 
             tk = Tokenizer()
             tk.fit_on_texts(X_word)
             X_token = tk.texts_to_sequences(X_word)
             vocab_size = len(tk.word_index)
 
-            X_token_pad = pad_sequences(X_token, dtype=float, padding='post', maxlen=max_length)
+            X_token_pad = pad_sequences(X_token, dtype=params["dtype"], padding=params["padding"], maxlen=params["max_length"])
             return X_token_pad, vocab_size, max_length
         X_pred_pad, train_vocab_size, train_max_length = preprocessing_cld(X_pred)
         train = []
-        return train.append([X_pred_pad, train_vocab_size, train_max_length])
+        train.append([X_pred_pad, train_vocab_size, train_max_length])
+        return train
 
     def BERT_preprocess():
         pass
