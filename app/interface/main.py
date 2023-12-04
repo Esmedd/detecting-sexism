@@ -259,22 +259,25 @@ def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:st
 
     return metrics
 
-
+@simple_time_and_memory_tracker
 def pred(model_name:str,X_pred: pd.DataFrame, preproc_params:dict,stage:str="Production") -> np.ndarray:
     """
     Make a prediction using the latest trained model
     """
 
     print("\n⭐️ Use case: predict")
-    X_clean = clean_new(X_pred)
+    X_clean = all_in_one(X_pred,text_col,selected_cols=["text"])
 
-    X_proc = preproc_pred(X_clean, model_name, preproc_params)
-
-    if preproc_params["embed"] == True:
-        model_name = f"{model_name}_embed"
+    try:
+        if preproc_params["embed"] == True:
+            model_name = f"{model_name}_embed"
+    except:
+        pass
 
     model = load_model(model_name=model_name, stage=stage)
     assert model is not None
+    print(model_name)
+    X_proc = preproc_pred(X_clean, model_name, preproc_params)
 
     print("\n🏁 Predict: Model has been load")
 
