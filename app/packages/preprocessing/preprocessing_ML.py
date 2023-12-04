@@ -10,7 +10,7 @@ import numpy as np
 from gensim.models import Word2Vec, KeyedVectors
 
 
-model_names = ["conv1d", "GRU", "LSTM", "multinomial", "BERT"]
+
 
 
 def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, params : dict=None):
@@ -278,7 +278,7 @@ def preproc_pred(X_pred:pd.DataFrame,model_name:str, params : dict=None):
         pass
 
     if model_name == "LSTM":
-        if params["embed"] == True:
+        if model_name == "LSTM" and params["embed"] == True:
             return Embed_LSTM_preproc(X_pred, params)
         else:
             return LSTM_preprocess(X_pred)
