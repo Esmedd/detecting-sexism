@@ -46,7 +46,7 @@ preproc_params_LSTM_bidir = {
 model_params_LSTM_bidir = {
     "lstm_units":50,
     "lstm_activation":"tanh",
-    "loss":"binary_crossentropy",
+    "loss":"binary_focal_crossentropy",
     "optimizer":"rmsprop",
     "batch_size":64,
     "patience":2,
