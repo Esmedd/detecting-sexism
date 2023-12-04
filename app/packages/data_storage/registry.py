@@ -52,7 +52,7 @@ def save_model(model_name:str, model: Model = None) -> None:
     timestamp = time.strftime("%Y%m%d-%H%M%S")
 
     # Save model locally
-    model_path = os.path.join(LOCAL_REGISTRY_PATH, "models", f"{timestamp}.h5")
+    model_path = os.path.join(LOCAL_REGISTRY_PATH, "models", f"{timestamp}_{model_name}.h5")
     model.save(model_path)
 
     print("✅ Model saved locally")
@@ -82,7 +82,7 @@ def load_model(model_name:str, stage="Production") -> Model:
 
         # Get the latest model version name by the timestamp on disk
         local_model_directory = os.path.join(LOCAL_REGISTRY_PATH, "models")
-        local_model_paths = glob.glob(f"{local_model_directory}/*")
+        local_model_paths = glob.glob(f"{local_model_directory}/*_{model_name}.h5")
 
         if not local_model_paths:
             return None
@@ -100,7 +100,7 @@ def load_model(model_name:str, stage="Production") -> Model:
     elif MODEL_TARGET == "mlflow":
         print(f"\nLoad [{stage}] model from MLflow...")
         # Load model from MLflow
-        # mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+        mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
         client = MlflowClient()
         try:
             model_versions = client.get_latest_versions(name=f"{MLFLOW_MODEL_NAME}_{model_name}", stages=[stage])

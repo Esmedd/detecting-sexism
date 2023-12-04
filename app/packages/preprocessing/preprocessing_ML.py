@@ -67,6 +67,7 @@ def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, param
     def Embed_LSTM_preproc(X_train:pd.DataFrame, X_test:pd.DataFrame, params:dict):
         tk = Tokenizer()
         tk.fit_on_texts(X_train.text)
+        word_index = tk.word_index
         vocab_size = len(tk.word_index)
         print(f'There are {vocab_size} different words in your corpus')
         X_train_token = tk.texts_to_sequences(X_train.text)
@@ -75,7 +76,9 @@ def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, param
         X_test_truncated = [sentence[:params["max_length"]] for sentence in X_test_token]
         X_train_pad = pad_sequences(X_train_truncated, maxlen=params["max_length"])
         X_test_pad = pad_sequences(X_test_truncated, maxlen=params["max_length"])
-        return X_train_pad, X_test_pad
+        train = []
+        train.append([X_train_pad,word_index, vocab_size])
+        return train, X_test_pad
     def Multinomial_preprocess(X_train, X_test):
 
         @simple_time_and_memory_tracker

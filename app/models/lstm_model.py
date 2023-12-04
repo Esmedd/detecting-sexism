@@ -72,14 +72,11 @@ def embed_preprocessing():
 
 
 
-def initialize_lstm(lstm_units=50, lstm_activation='tanh', embedding:bool=False):
+def initialize_lstm(lstm_units=50, lstm_activation='tanh',max_length:int=100, embedding:bool=False, word_index=None):
 
     if embedding == True:
-        max_length = 100
-        tk = Tokenizer()
         model_wiki = gensim.downloader.load('glove-twitter-200') # loads dataset (Glove Twitter, 100dimensions)
-        embedding_dim = 200  # GloVe vectors dimension
-        word_index = tk.word_index  # using fitted tokenizer
+        embedding_dim = 200  # GloVe vectors dimension # using fitted tokenizer
         embedding_matrix = np.zeros((len(word_index) + 1, embedding_dim)) # initalize embedding matrix
         for word, i in word_index.items():
             try:

@@ -143,16 +143,16 @@ def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_p
 
 
     if model_name == "conv1d":
-
-
         X_train_preproc_conv = X_train_preproc[0][0]
-        # X_test_preproc = X_test_preproc[0]
+        train_vocab_size = X_train_preproc[0][1]
+        train_max_length = X_train_preproc[0][2]
 
-        train_vocab_size = int(X_train_preproc[0][1])
-        # test_vocab_size = X_test_preproc[1]
+    if preproc_params["embed"] == True:
+        X_train_preproc_emb = X_train_preproc[0][0]
+        train_word_index = X_train_preproc[0][1]
+        train_vocab_size = X_train_preproc[0][2]
 
-        train_max_length = int(X_train_preproc[0][2])
-        # test_max_length = X_test_preproc[2]
+
 
     # Train model using `model.py`
     # model = load_model(model_name=model_name)
@@ -161,10 +161,9 @@ def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_p
     #     pass
     if model_name == "LSTM":
         if preproc_params["embed"] == True:
-            pass
-            model = initialize_lstm(lstm_units=model_params["lstm_units"],lstm_activation=model_params["lstm_activation"], embedding=preproc_params["embed"])
+            model = initialize_lstm(lstm_units=model_params["lstm_units"],lstm_activation=model_params["lstm_activation"],max_length=preproc_params["max_length"], embedding=preproc_params["embed"], word_index=train_word_index)
             model = compile_lstm_model(model=model, loss=model_params["loss"], optimizer=model_params['optimizer'])
-            model, history = train_lstm_model(model=model, X=X_train_preproc, y=y_train, batch_size=model_params["batch_size"], patience=model_params["patience"],validation_data=None,validation_split=model_params["validation_split"])
+            model, history = train_lstm_model(model=model, X=X_train_preproc_emb, y=y_train, batch_size=model_params["batch_size"], patience=model_params["patience"],validation_data=None,validation_split=model_params["validation_split"])
 
         else:
             model = initialize_lstm(lstm_units=model_params["lstm_units"],lstm_activation=model_params["lstm_activation"], embedding=preproc_params["embed"])
@@ -225,13 +224,17 @@ def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:st
         test_vocab_size = X_test_preproc[0][1]
         test_max_length = X_test_preproc[0][2]
 
+    if preproc_params["embed"] == True:
+        model_name = f"{model_name}_embed"
     model = load_model(model_name=model_name,stage=stage)
     assert model is not None
 
 
-    if model_name == "LSTM":
+    if model_name == "LSTM" and preproc_params["embed"] == False:
         metrics = evaluate_lstm_model(model, X=X_test_preproc, y=y_test, batch_size=batch_size )
-    if model_name == "LSTM_embed":
+    if preproc_params["embed"] == True:
+        print(X_test_preproc)
+        print(X_test_preproc.shape)
         metrics = evaluate_lstm_model(model, X=X_test_preproc, y=y_test, batch_size=batch_size )
     if model_name == "multinomial":
         pass
@@ -264,10 +267,15 @@ def pred(model_name:str,X_pred: pd.DataFrame, preproc_params:dict,stage:str="Pro
 
     print("\n⭐️ Use case: predict")
 
+    X_proc = preproc_pred(X_pred, model_name, preproc_params)
+
+    if preproc_params["embed"] == True:
+        model_name = f"{model_name}_embed"
+
     model = load_model(model_name=model_name, stage=stage)
     assert model is not None
+
     print("\n🏁 Predict: Model has been load")
-    X_proc = preproc_pred(X_pred, model_name, preproc_params)
 
     if model_name == "conv1d":
         X_proc = X_proc[0][0]
