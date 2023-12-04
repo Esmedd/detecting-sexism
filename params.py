@@ -1,4 +1,5 @@
 import os
+from tensorflow.keras.optimizers import Adam
 
 ##################  VARIABLES  #####################
 preproc_params_LSTM = {
@@ -43,6 +44,47 @@ model_params_GRU = {
     "validation_split":0.2
 }
 
+preproc_params_c1d = {
+    "max_length":100,
+    "vector_size":50,
+    "window":5,
+    "lower":False,
+    "split":" ",
+    "dtype":"float32",
+    "padding":"post",
+}
+
+model_params_c1d = {
+    "embedding_size":100,
+    "loss":"binary_crossentropy",
+    "optimizer":Adam(learning_rate=0.001),
+    "globalmax":True,
+    "complex":True,
+    "batch_size":64,
+    "patience":1,
+    "validation_split":0.2
+}
+
+preproc_params_LSTM_embed = {
+    "max_length":100,
+    "vector_size":50,
+    "window":5,
+    "embed":True,
+    "lower":True,
+    "split":" ",
+    "dtype":"float32",
+    "padding":"post",
+}
+
+model_params_LSTM_embed = {
+    "lstm_units":50,
+    "lstm_activation":"tanh",
+    "loss":"binary_crossentropy",
+    "optimizer":"rmsprop",
+    "batch_size":64,
+    "patience":1,
+    "validation_split":0.2
+}
 
 ##################   MLFLOW    #####################
 MODEL_TARGET="mlflow"
