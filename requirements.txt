@@ -22,7 +22,7 @@ nltk==3.8.1
 numpy==1.26.2
 pandas
 
-prefect==2.8.1
+prefect
 
 regex
 requests
