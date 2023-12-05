@@ -101,10 +101,24 @@ def train_flow_splitted(model_name:str,clean_params:dict , preproc_params:dict, 
 
     history = new_train.submit(model_name, X_train_preproc, y_train, preproc_params,model_params)
 
-    new_acc = round(np.min((history.result()).history['val_recall']), 2)
-    old_acc = round((metrics.result())["recall"], 2)
+    history = history.result()
+    metrics = metrics.result()
+
+    print(f"Metrics Keys: {metrics.keys()} // History Keys : {history.keys()}")
+    new_recall = round(np.min(history.history['val_recall']), 2)
+    old_recall = round((metrics)["recall"], 2)
+
+    new_acc = round(np.min(history.history['val_accuracy']), 2)
+    old_acc = round((metrics)["accuracy"], 2)
+
+    new_precision = round(np.min(history.history['val_precision']), 2)
+    old_precision = round((metrics)["precision"], 2)
+
 
     print(f"🏁 new_acc: {new_acc} // old_acc: {old_acc}")
+    print(f"🏁 new_recall: {new_recall} // old_recall: {old_recall}")
+    print(f"🏁 new_precision: {new_precision} // old_precision: {old_precision}")
+
     if new_acc > old_acc:
         transition_model("Staging", "Production")
         print("⭐️ New model has been set on Production")
