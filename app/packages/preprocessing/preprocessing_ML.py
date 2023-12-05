@@ -69,10 +69,9 @@ def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, param
 
     def Embed_LSTM_preproc(X_train:pd.DataFrame, X_test:pd.DataFrame, params:dict):
         model_name = "Glove"
-        print("hello")
         tk = Tokenizer()
         tk.fit_on_texts(X_train.text)
-        with open(LOCAL_REGISTRY_PATH+'/tokenizer/'+f'{model_name}_{params["max_length"]}_{params["vector_size"]}_{params["window"]}' , 'wb') as tokenizer_file:
+        with open(LOCAL_REGISTRY_PATH+'/tokenizer/'+f'{model_name}_{params["max_length"]}_{params["vector_size"]}_{params["window"]}.pickle' , 'wb') as tokenizer_file:
             print(LOCAL_REGISTRY_PATH+'tokenizer'+f'{model_name}_{params["max_length"]}_{params["vector_size"]}_{params["window"]}' , 'wb')
             pickle.dump(tk, tokenizer_file)
         word_index = tk.word_index
@@ -144,7 +143,7 @@ def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, param
 
             tk = Tokenizer()
             tk.fit_on_texts(X_word)
-            with open(LOCAL_REGISTRY_PATH, 'tokenizer',f'{model_name}_{params["vector_size"]}_{params["window"]}' , 'wb') as tokenizer_file:
+            with open(LOCAL_REGISTRY_PATH+'/tokenizer/'+f'{model_name}_{params["max_length"]}_{params["vector_size"]}_{params["window"]}.pickle' , 'wb') as tokenizer_file:
                 pickle.dump(tk, tokenizer_file)
             X_token = tk.texts_to_sequences(X_word)
             vocab_size = len(tk.word_index)
@@ -217,7 +216,7 @@ def preproc_pred(X_pred:pd.DataFrame,model_name:str, params : dict=None):
 
     def Embed_LSTM_preproc(X_pred:pd.DataFrame, params:dict):
         model_name = "Glove"
-        with open(LOCAL_REGISTRY_PATH, 'tokenizer',f'{model_name}_{params["vector_size"]}_{params["window"]}' , 'wb') as tokenizer_file:
+        with open(LOCAL_REGISTRY_PATH+'/tokenizer/'+f'{model_name}_{params["max_length"]}_{params["vector_size"]}_{params["window"]}.pickle' , 'rb') as tokenizer_file:
             tk = pickle.load(tokenizer_file)
         vocab_size = len(tk.word_index)
         print(f'There are {vocab_size} different words in your corpus')
@@ -276,7 +275,7 @@ def preproc_pred(X_pred:pd.DataFrame,model_name:str, params : dict=None):
             X_l = X.values.tolist()
             X_word = [text_to_word_sequence("".join(x)) for x in X_l]
 
-            with open(LOCAL_REGISTRY_PATH, 'tokenizer',f'{model_name}_{params["vector_size"]}_{params["window"]}' , 'wb') as tokenizer_file:
+            with open(LOCAL_REGISTRY_PATH, 'tokenizer',f'{model_name}_{params["vector_size"]}_{params["window"]}.pickle' , 'rb') as tokenizer_file:
                 tk = pickle.load(tokenizer_file)
             X_token = tk.texts_to_sequences(X_word)
             vocab_size = len(tk.word_index)
