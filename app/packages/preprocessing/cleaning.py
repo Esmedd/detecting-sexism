@@ -149,7 +149,7 @@ def all_in_one( data : pd.DataFrame(),
     if func_to_exec[8] == True:
         data = remove_accents(data,text_col)
     if func_to_exec[9] == True:
-        data = remove_punctuation(data,text_col)
+        data = remove_numbers(data,text_col)
     if func_to_exec[10] == True:
         data = strip(data,text_col)
 

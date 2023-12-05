@@ -287,6 +287,8 @@ def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:st
     # if model_name == "BERT":
 
 
+
+
     params = dict(
         context="evaluate", # Package behavior,
         row_count=len(X_test_preproc),
@@ -350,6 +352,10 @@ def main_splitted(model_name:str,clean_param:dict, preproc_params:dict, model_pa
     X_train_preproc, X_test_preproc, y_train, y_test = preprocess_splitted(model_name=model_name,Train=Train,Test=Test,preproc_params=preproc_params)
     train(model_name, X_train_preproc, y_train, preproc_params,model_params)
     metrics = evaluate(model_name, X_test_preproc, y_test,preproc_params)
+    y_pred = pred(model_name, Test["text"], clean_param, preproc_name)
+    df = Test[["text"]].copy()
+    df["y_pred"] = y_pred
+    df.to_csv(f"data/pred/{model_name}.csv", index=False, header=False)
 
 
 if __name__ == '__main__':
