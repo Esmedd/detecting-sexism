@@ -117,6 +117,35 @@ def load_model(model_name:str, stage="Production") -> Model:
     else:
         return None
 
+def load_model_local(model_file:str) -> Model:
+    """
+    Return a saved model:
+    - locally (latest one in alphabetical order)
+    - or from GCS (most recent one) if MODEL_TARGET=='gcs'  --> for unit 02 only
+    - or from MLFLOW (by "stage") if MODEL_TARGET=='mlflow' --> for unit 03 only
+
+    Return None (but do not Raise) if no model is found
+
+    """
+
+    print(f"\nLoad latest model from local registry...")
+
+    # Get the latest model version name by the timestamp on disk
+    local_model_directory = os.path.join(LOCAL_REGISTRY_PATH, "models")
+    local_model_paths = glob.glob(f"{local_model_directory}/{model_file}.h5")
+
+    if not local_model_paths:
+        return None
+
+    most_recent_model_path_on_disk = sorted(local_model_paths)[-1]
+
+    print(f"\nLoad latest model from disk...")
+
+    latest_model = models.load_model(most_recent_model_path_on_disk)
+
+    print("✅ Model loaded from local disk")
+
+    return latest_model
 
 
 def mlflow_transition_model(model_name:str, current_stage: str, new_stage: str) -> None:

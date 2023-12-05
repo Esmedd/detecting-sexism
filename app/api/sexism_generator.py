@@ -13,7 +13,7 @@ def generate_sexism(phrases=1):
     """Generates n sexist phrases.
     Outputs a list of strings.
     """
-    template_list = Template.sample(phrases)
+    template_list = template.sample(phrases)
     def sexist_phrase(templatess):
         for i in template.columns.tolist():
             j = template[i].dropna().sample(1).values[0]

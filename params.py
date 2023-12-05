@@ -35,7 +35,7 @@ preproc_params_LSTM_bidir = {
     "max_length":100,
     "vector_size":50,
     "window":5,
-    "embed":False,
+    "embed":True,
     "lower":True,
     "split":" ",
     "dtype":"float32",
