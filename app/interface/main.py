@@ -235,13 +235,12 @@ def train(model_name:str,X_train_preproc, y_train, preproc_params: dict, model_p
 
     # Save model weight on the hard drive (and optionally on GCS too!)
     try:
-        if preproc_params["embed"] == True and preproc_params["bidirectional"]== False:
-            model_name = f"{model_name}_GLOVE"
-        if preproc_params["embed"] == True and preproc_params["bidirectional"]== True:
-            model_name = f"{model_name}_GLOVE_BIDIR"
+        if preproc_params["embed"] == True and preproc_params["bidirectional"] == True :
+            model_name = f"{model_name}_bidir"
+        if preproc_params["embed"] == True and preproc_params["bidirectional"] == False :
+            model_name = f"{model_name}_glove"
     except:
         pass
-
     save_model(model_name=model_name,model=model)
 
     # The latest model should be moved to staging
@@ -266,10 +265,13 @@ def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:st
         test_max_length = X_test_preproc[0][2]
 
     try:
-        if preproc_params["embed"] == True:
-            model_name = f"{model_name}_embed"
+        if preproc_params["embed"] == True and preproc_params["bidirectional"] == True :
+            model_name = f"{model_name}_bidir"
+        if preproc_params["embed"] == True and preproc_params["bidirectional"] == False :
+            model_name = f"{model_name}_glove"
     except:
         pass
+
     model = load_model(model_name=model_name,stage=stage)
     assert model is not None
 
@@ -313,8 +315,10 @@ def pred(model_name:str,X_pred: pd.DataFrame,clean_params:dict,preproc_params:di
     X_clean = all_in_one(X_pred,"text",selected_cols=["text"],concatenate=clean_param["concatenate"],url_label=clean_param["url_label"], usr_label=clean_param["usr_label"], func_to_exec=clean_param["functions"])
 
     try:
-        if preproc_params["embed"] == True:
-            model_name = f"{model_name}_embed"
+        if preproc_params["embed"] == True and preproc_params["bidirectional"] == True :
+            model_name = f"{model_name}_bidir"
+        if preproc_params["embed"] == True and preproc_params["bidirectional"] == False :
+            model_name = f"{model_name}_glove"
     except:
         pass
 
@@ -333,6 +337,29 @@ def pred(model_name:str,X_pred: pd.DataFrame,clean_params:dict,preproc_params:di
     print("\n✅ prediction done: ", y_pred, y_pred.shape, "\n")
     return y_pred
 
+@simple_time_and_memory_tracker
+def fast_pred(model_name:str, model,X_pred: pd.DataFrame,clean_params:dict,preproc_params:dict,stage:str="Production") -> np.ndarray:
+    """
+    Make a prediction using the latest trained model
+    """
+
+    print("\n⭐️ Use case: predict")
+    X_clean = all_in_one(X_pred,"text",selected_cols=["text"],concatenate=clean_param["concatenate"],url_label=clean_param["url_label"], usr_label=clean_param["usr_label"], func_to_exec=clean_param["functions"])
+
+
+    print(X_pred)
+    X_proc = preproc_pred(X_clean, model_name, preproc_params)
+
+    print("\n🏁 Predict: Model has been load")
+    print(X_proc)
+
+    if model_name == "conv1d":
+        X_proc = X_proc[0][0]
+
+    y_pred = model.predict(X_proc)
+
+    print("\n✅ prediction done: ", y_pred, y_pred.shape, "\n")
+    return y_pred
 #@mlflow_run
 # def evaluate(
 #      stage: str = "Production") -> float
@@ -352,10 +379,7 @@ def main_splitted(model_name:str,clean_param:dict, preproc_params:dict, model_pa
     X_train_preproc, X_test_preproc, y_train, y_test = preprocess_splitted(model_name=model_name,Train=Train,Test=Test,preproc_params=preproc_params)
     train(model_name, X_train_preproc, y_train, preproc_params,model_params)
     metrics = evaluate(model_name, X_test_preproc, y_test,preproc_params)
-    y_pred = pred(model_name, Test["text"], clean_param, preproc_name)
-    df = Test[["text"]].copy()
-    df["y_pred"] = y_pred
-    df.to_csv(f"data/pred/{model_name}.csv", index=False, header=False)
+
 
 
 if __name__ == '__main__':

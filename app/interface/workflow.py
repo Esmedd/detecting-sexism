@@ -65,15 +65,28 @@ def train_flow(model_name:str,clean_params:dict , preproc_params:dict, model_par
 
 
     cleaned_df = clean_data.submit(clean_params, data)
-    X_train_preproc, X_test_preproc, y_train, y_test = preprocess_new_data(model_name=model_name,cleaned_df=cleaned_df ,preproc_params=preproc_params)
-
+    preproc= preprocess_new_data.submit(model_name=model_name,cleaned_df=cleaned_df ,preproc_params=preproc_params, wait_for=[cleaned_df])
+    X_train_preproc, X_test_preproc, y_train, y_test=preproc.result()
     metrics = evaluate_production_model.submit(model_name, X_test_preproc, y_test, preproc_params)
 
-    history = new_train.submit(model_name, X_train_preproc, y_train, preproc_params,model_params)
+    history = new_train.submit(model_name, X_train_preproc, y_train, preproc_params,model_params, wait_for=[preproc])
 
-    new_acc = round(np.min((history.result()).history['val_recall']), 2)
-    old_acc = round((metrics.result())["recall"], 2)
+    history = history.result()
+    metrics = metrics.result()
 
+    new_recall = round(np.min(history.history['val_recall']), 2)
+    old_recall = round((metrics)["recall"], 2)
+
+    new_acc = round(np.min(history.history['val_accuracy']), 2)
+    old_acc = round((metrics)["accuracy"], 2)
+
+    new_precision = round(np.min(history.history['val_precision']), 2)
+    old_precision = round((metrics)["precision"], 2)
+
+
+    print(f"🏁 new_acc: {new_acc} // old_acc: {old_acc}")
+    print(f"🏁 new_recall: {new_recall} // old_recall: {old_recall}")
+    print(f"🏁 new_precision: {new_precision} // old_precision: {old_precision}")
     print(f"🏁 new_acc: {new_acc} // old_acc: {old_acc}")
     if new_acc > old_acc:
         transition_model("Staging", "Production")
