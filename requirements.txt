@@ -9,9 +9,9 @@ gensim
 google-cloud-bigquery
 google-cloud-storage
 
-bert-tensorflow
+# bert-tensorflow
 
-#googletrans==4.0.0-rc1
+googletrans==4.0.0-rc1
 httpx
 keras==2.10.0
 Keras-Preprocessing==1.1.2

@@ -1,10 +1,10 @@
 from googletrans import Translator, LANGUAGES, LANGCODES
-from app.packages.preprocessing.cleaning import *
 from app.packages.utils import *
 import numpy as np
+import pandas as pd
 
 @simple_time_and_memory_tracker
-def translation(path, text_col:str, selected_cols:list = None,method:str="concat", dest:str="en" ):
+def translation(text:str, dest:str="en" ):
     """Function to translate automatically a text column.
     >>> 'path' -> csv to translate
 
@@ -27,11 +27,19 @@ def translation(path, text_col:str, selected_cols:list = None,method:str="concat
 
         example : clean.all_in_one(data=clean.data, text_col="text", selected_cols=["text", "sexist_binary"], method="splitted")
     """
-    clean = cleaning(path)
-    data = clean.all_in_one(data=clean.data, text_col=text_col, selected_cols=selected_cols, method=method)
     translator = Translator()
-    data[text_col] = data[text_col].apply(lambda x: translator.translate(x, dest=dest).text)
-    return data
+    translated = translator.translate(text, dest=dest).text
+    return translated
+
+@simple_time_and_memory_tracker
+def predict_language(text:str):
+    translator = Translator()
+    pred = translator.detect(text)
+    print(pred)
+    print(pred.lang)
+    return pred.lang
+
+predict_language("Bonjour, je m'appelle Arnaud")
 
 @simple_time_and_memory_tracker
 def add_to_csv(dest_path:str, data: pd.DataFrame):
