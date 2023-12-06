@@ -4,8 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import os
 
-from app.packages.data_storage.registry import load_model
+from app.packages.data_storage.registry import load_model, load_model_local
 from app.packages.preprocessing.preprocessing_ML import *
+from app.packages.preprocessing.translate import *
 from app.interface.main import *
 
 app = FastAPI()
@@ -32,6 +33,12 @@ def predict(text):
     """
     Make a single prediction.
     """
+
+    try:
+        if predict_language(text) != "en":
+            text = translation(text)
+    except:
+        pass
     print(text)
     l = []
     l.append(text)
@@ -62,3 +69,7 @@ def predict(text):
 @app.get("/")
 def root():
     return {'greeting': 'Hello'}
+
+@app.get("/ping")
+def pong():
+    return {"response":"pong"}
