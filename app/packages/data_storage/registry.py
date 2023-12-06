@@ -131,9 +131,20 @@ def load_model_local(model_file:str) -> Model:
     print(f"\nLoad latest model from local registry...")
 
     # Get the latest model version name by the timestamp on disk
-    local_model_directory = os.path.join(LOCAL_REGISTRY_PATH, "models")
-    local_model_paths = glob.glob(f"{local_model_directory}/{model_file}.h5")
 
+    if "root" in LOCAL_REGISTRY_PATH:
+        path = f"./training_outputs/models/{model_file}.h5"
+        print(path)
+        local_model_paths = glob.glob(path)
+        print("loaded from docker")
+    else:
+        local_model_directory = os.path.join(LOCAL_REGISTRY_PATH, "models")
+        local_model_paths = glob.glob(f"{local_model_directory}/{model_file}.h5")
+        print(os.path.join(LOCAL_REGISTRY_PATH, "models", f"{local_model_directory}", f"{model_file}.h5"))
+        print("loaded locally")
+
+
+    print(f"\nlatest model from local registry: Loaded")
     if not local_model_paths:
         return None
 

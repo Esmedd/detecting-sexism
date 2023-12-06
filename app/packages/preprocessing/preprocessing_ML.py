@@ -216,8 +216,15 @@ def preproc_pred(X_pred:pd.DataFrame,model_name:str, params : dict=None):
 
     def Embed_LSTM_preproc(X_pred:pd.DataFrame, params:dict):
         model_name = "Glove"
-        with open(LOCAL_REGISTRY_PATH+'/tokenizer/'+f'{model_name}_{params["max_length"]}_{params["vector_size"]}_{params["window"]}.pickle' , 'rb') as tokenizer_file:
-            tk = pickle.load(tokenizer_file)
+
+        if "root" in LOCAL_REGISTRY_PATH:
+            path = f"./training_outputs/tokenizer/{model_name}_{params['max_length']}_{params['vector_size']}_{params['window']}.pickle"
+            with open(path , 'rb') as tokenizer_file:
+                tk = pickle.load(tokenizer_file)
+        else:
+            with open(LOCAL_REGISTRY_PATH+'/tokenizer/'+f'{model_name}_{params["max_length"]}_{params["vector_size"]}_{params["window"]}.pickle' , 'rb') as tokenizer_file:
+                tk = pickle.load(tokenizer_file)
+
         vocab_size = len(tk.word_index)
         print(f'There are {vocab_size} different words in your corpus')
         X_pred_token = tk.texts_to_sequences(X_pred.text)
@@ -275,8 +282,13 @@ def preproc_pred(X_pred:pd.DataFrame,model_name:str, params : dict=None):
             X_l = X.values.tolist()
             X_word = [text_to_word_sequence("".join(x)) for x in X_l]
 
-            with open(LOCAL_REGISTRY_PATH, 'tokenizer',f'{model_name}_{params["vector_size"]}_{params["window"]}.pickle' , 'rb') as tokenizer_file:
-                tk = pickle.load(tokenizer_file)
+            if "root" in LOCAL_REGISTRY_PATH:
+                path = f"./training_outputs/tokenizer/{model_name}_{params['max_length']}_{params['vector_size']}_{params['window']}.pickle"
+                with open(path , 'rb') as tokenizer_file:
+                    tk = pickle.load(tokenizer_file)
+            else:
+                with open(LOCAL_REGISTRY_PATH+'/tokenizer/'+f'{model_name}_{params["max_length"]}_{params["vector_size"]}_{params["window"]}.pickle' , 'rb') as tokenizer_file:
+                    tk = pickle.load(tokenizer_file)
             X_token = tk.texts_to_sequences(X_word)
             vocab_size = len(tk.word_index)
 
