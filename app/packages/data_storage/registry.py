@@ -6,6 +6,7 @@ from tensorflow import keras
 from keras import models, Model
 from google.cloud import storage
 from params import *
+from app.models.elizaBERT import *
 
 import mlflow
 from mlflow.tracking import MlflowClient
@@ -131,12 +132,26 @@ def load_model_local(model_file:str) -> Model:
     print(f"\nLoad latest model from local registry...")
 
     # Get the latest model version name by the timestamp on disk
-
-    if "root" in LOCAL_REGISTRY_PATH:
-        path = f"./training_outputs/models/{model_file}.h5"
-        print(path)
-        local_model_paths = glob.glob(path)
+    print(LOCAL_REGISTRY_PATH)
+    if "root" in LOCAL_REGISTRY_PATH or "home" in LOCAL_REGISTRY_PATH:
+        if "BERT" in model_file:
+            print("BERT detected")
+            from keras.models import load_model
+            model = load_model(f'./training_outputs/models/{model_file}.h5', custom_objects={'KerasLayer': bert_layer}, compile=False)
+            model.compile()
+            return model
+        else:
+            path = f"./training_outputs/models/{model_file}.h5"
+            print(path)
+            local_model_paths = glob.glob(path)
         print("loaded from docker")
+    elif "BERT" in model_file:
+        print("BERT detected")
+        from keras.models import load_model
+        path = os.path.join(LOCAL_REGISTRY_PATH, "models", f"{model_file}.h5")
+        model = load_model(path, custom_objects={'KerasLayer': bert_layer}, compile=False)
+        model.compile()
+        return model
     else:
         local_model_directory = os.path.join(LOCAL_REGISTRY_PATH, "models")
         local_model_paths = glob.glob(f"{local_model_directory}/{model_file}.h5")

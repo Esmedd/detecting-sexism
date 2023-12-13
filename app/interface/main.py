@@ -7,7 +7,7 @@ from app.models.multinomial_model import *
 from app.models.conv1d_model import *
 from app.models.GRU_model import *
 from app.models.lstm_model import *
-
+from app.models.elizaBERT import *
 from app.packages.data_storage.data_storage import *
 from app.packages.data_storage.registry import *
 from app.models.lstm_model import *
@@ -278,7 +278,7 @@ def evaluate(model_name:str,X_test_preproc, y_test, preproc_params:dict,stage:st
 
     if model_name == "LSTM" and preproc_params["embed"] == False:
         metrics = evaluate_lstm_model(model, X=X_test_preproc, y=y_test, batch_size=batch_size )
-    if model_name == "LSTM_embed":
+    if model_name == "LSTM_glove" or model_name == "LSTM_bidir":
         metrics = evaluate_lstm_model(model, X=X_test_preproc, y=y_test, batch_size=batch_size )
     if model_name == "multinomial":
         pass
@@ -347,11 +347,11 @@ def fast_pred(model_name:str, model,X_pred: pd.DataFrame,clean_params:dict,prepr
     X_clean = all_in_one(X_pred,"text",selected_cols=["text"],concatenate=clean_param["concatenate"],url_label=clean_param["url_label"], usr_label=clean_param["usr_label"], func_to_exec=clean_param["functions"])
 
 
-    print(X_pred)
-    X_proc = preproc_pred(X_clean, model_name, preproc_params)
+    if model_name == "BERT":
+        X_proc = preproc_Bert(X_clean)
+    else:
+        X_proc = preproc_pred(X_clean, model_name, preproc_params)
 
-    print("\n🏁 Predict: Model has been load")
-    print(X_proc)
 
     if model_name == "conv1d":
         X_proc = X_proc[0][0]

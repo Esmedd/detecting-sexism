@@ -5,6 +5,13 @@ gensim
 google-cloud-bigquery
 google-cloud-storage
 
+
+tensorflow_datasets==4.4.0
+sentencepiece
+gin-config
+tensorflow-addons
+tensorflow_hub
+
 googletrans==4.0.0-rc1
 httpx
 keras==2.10.0
