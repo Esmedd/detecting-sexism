@@ -3,7 +3,8 @@ import tracemalloc
 from params import *
 
 def simple_time_and_memory_tracker(method):
-
+    '''Tracks time and memory taken to execute function.
+    '''
     # ### Log Level
     # 0: Nothing
     # 1: Print Time and Memory usage of functions
