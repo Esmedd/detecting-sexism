@@ -8,7 +8,13 @@ fastapi
 gensim
 google-cloud-bigquery
 google-cloud-storage
-
+## START Preproc BERT
+tensorflow_datasets==4.4.0
+sentencepiece
+gin-config
+tensorflow-addons
+tensorflow_hub
+# END Preproc BERT
 # bert-tensorflow
 
 googletrans==4.0.0-rc1

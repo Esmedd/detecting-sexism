@@ -7,8 +7,8 @@ import os
 from app.packages.data_storage.registry import load_model, load_model_local
 from app.packages.preprocessing.preprocessing_ML import *
 from app.packages.preprocessing.translate import *
-from app.interface.main import *
-
+from app.interface.main import fast_pred
+from app.models.elizaBERT import *
 app = FastAPI()
 
 
@@ -23,35 +23,49 @@ app.add_middleware(
 )
 
 # app.state.model = load_model("LSTM")
-app.state.model = load_model_local("20231205-131210_LSTM_GLOVE_BIDIR")
-assert app.state.model is not None
+app.state.model_BERT = load_model_local("BERT_EN_UNCASED_BPUN_W")
+app.state.model_BIDIR = load_model_local("20231205-131210_LSTM_GLOVE_BIDIR")
+app.state.model_GLOVE = load_model_local("20231204-135910_LSTM_embed")
+app.state.model_GRU = load_model_local("20231207-115704_GRU")
+
+
+assert app.state.model_BERT is not None
 print("🏁 Model has been loaded")
 
 # http://127.0.0.1:8000/predict?text=
 @app.get("/predict")
-def predict(text):
+def predict(text, model_name:str="BERT"):
     """
     Make a single prediction.
     """
+    model_name = model_name.upper()
+    if model_name == "BERT":
+        app.state.model = app.state.model_BERT
+    if model_name == "Bidir":
+        model_name = "LSTM"
+        app.state.model = app.state.model_BIDIR
+    if model_name == "Glove":
+        model_name = "LSTM"
+        app.state.model = app.state.model_GLOVE
+    if model_name == "GRU":
+        app.state.model = app.state.model_GRU
 
     try:
         if predict_language(text) != "en":
             text = translation(text)
     except:
         pass
-    print(text)
+
     l = []
     l.append(text)
-
     X_pred = pd.DataFrame({"text":l})
-    print(3)
     sentence = X_pred["text"][0]
-    print(4)
-    print(X_pred.shape)
 
-    y_pred = fast_pred("LSTM", app.state.model, X_pred, clean_param, preproc_params_LSTM_bidir)
-    print(y_pred[0][0])
-    print(5)
+    print("Starting: pred")
+    y_pred = fast_pred(model_name, app.state.model, X_pred, clean_param, preproc_params_LSTM_bidir)
+    print("pred is done")
+    print(y_pred)
+
 
     return {sentence: float(y_pred[0][0])}
 
