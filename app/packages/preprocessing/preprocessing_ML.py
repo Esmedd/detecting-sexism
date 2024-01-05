@@ -180,6 +180,18 @@ def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, param
         return LSTM_preprocess(X_train, X_test)
 
     def Conv1d_preprocess(X_train, X_test):
+        """Preprocess train and test X data for Conv1d model.
+        Must have passed 'preproc_params_c1d' as params in preproc_test()
+        Args:
+            X_train (pd.DataFrame): Data frame of strings to train model
+            X_test (pd.DataFrame): Data frame of strings to test model
+
+        Returns:
+            X train (list): Returns the preprocessed X train, the maxlen and
+            the vocab size as output for use in initialize model function
+            X test (list): Returns the preprocessed X test, the maxlen and
+            the vocab size as output for use in initialize model function
+        """
         model_name = "conv1d"
         max_length = params["max_length"]
         @simple_time_and_memory_tracker
