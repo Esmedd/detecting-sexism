@@ -36,6 +36,17 @@ def drop_na(data, selected_columns: list = None):
 # Remove Urls in text and replace them by "[URL]""
 @simple_time_and_memory_tracker
 def urls_remover( data, target_column:str, label:str="[URL]"):
+    """Removes URLs from target column in a given data frame
+    replaces them with a chosen label
+
+    Args:
+        data (pd.DataFrame): dataframe
+        target_column (str): name of column to use
+        label (str, optional): String label. Defaults to "[URL]".
+
+    Returns:
+        data (pd.DataFrame): returns updated dataframe
+    """
     data[target_column] = data[target_column].str.replace(r'\s*https?://\S+(\s+|$)',label, regex=True)
     data[target_column] = data[target_column].str.replace(r'\s*http?://\S+(\s+|$)',label,regex=True)
     return data
@@ -43,12 +54,33 @@ def urls_remover( data, target_column:str, label:str="[URL]"):
     # Remove Usernames in text and replace them by "[USERNAME]"
 @simple_time_and_memory_tracker
 def username_remover( data, target_column:str, label:str="[USERNAME]"):
+    """Removes usernames from target column in a given data frame
+    replaces them with a chosen label
+
+    Args:
+        data (pd.DataFrame): dataframe
+        target_column (str): name of column to use
+        label (str, optional): String label. Defaults to "[USERNAME]".
+
+    Returns:
+        data (pd.DataFrame): returns updated dataframe
+    """
     data[target_column] = data[target_column].str.replace(r'\s*@\S+(\s+|$)',label, regex=True)
     return data
 
 # Replace Emojis in text and replace them by their descriptions wrapped in squared brackets
 @simple_time_and_memory_tracker
 def emoji_replacer( data, target_column:str):
+    """Replaces emojis in a given column of a given dataframe
+    with their text decription
+
+    Args:
+        data (pd.DataFrame): dataframe
+        target_column (str): name of column to use
+
+    Returns:
+        data (pd.DataFrame): returns updated dataframe
+    """
     data[target_column] = data[target_column].apply(lambda x:emoji.demojize(x, delimiters=("[", "]")) )
     return data
 
@@ -71,6 +103,12 @@ def hashtag_adapter(data:pd.DataFrame, target_column:str, concatenate:bool=True)
 
 @simple_time_and_memory_tracker
 def remove_punctuation(data:pd.DataFrame, text_col:str): #remove punctuation
+    """Removes punctuation in a given column of a given dataframe
+
+    Args:
+        data (pd.DataFrame): dataframe
+        text_col (str): name of column to use
+    """
     def remove_punct(text):
         for punctuation in string.punctuation:
             if punctuation != "[" and punctuation != "]":
