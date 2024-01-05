@@ -1,5 +1,7 @@
 # detecting-sexism
 
+![You're Not Sexist](/results/YNSdemoday1.jpg)
+
 In the context of the final project for Le Wagon Data Science & AI course, we have built an NLP model able to detect sexism in text. 
 The initial classification will be a binary 'sexist' or 'not sexist'. 
 
@@ -13,7 +15,11 @@ As opposed to previous research and models, we used a dataset composed of 6 text
 
 As the datasets use different annotation rules, we hoped to provide a richness and nuance to the model, at the risk of being 'overly accusatory'. 
 
+![yourenotsexist Initial Models](results/YNSdemoday6.jpg)
+
 Our final model, which can be tested [here](https://youre-not-sexist.streamlit.app/), is a fine-tuned BERT model, trained for Precision.
+
+![yourenotsexist Final Model](results/YNSdemoday7.jpg)
 
 The options for further exploration include, but are not limited to:
 * Developing a french model
