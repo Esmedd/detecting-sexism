@@ -33,6 +33,7 @@ def translation(text:str, dest:str="en" ):
 
 @simple_time_and_memory_tracker
 def predict_language(text:str):
+    """Predict language in which a text string is written"""
     translator = Translator()
     pred = translator.detect(text)
     print(pred)

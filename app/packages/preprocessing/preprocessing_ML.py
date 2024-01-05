@@ -11,11 +11,27 @@ import numpy as np
 from gensim.models import Word2Vec, KeyedVectors
 
 
-
-
-
 def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, params : dict=None):
+    """Preprocess train and test X data.
+    Args:
+        X_train (pd.DataFrame): Data frame of strings to train model
+        X_test (pd.DataFrame): Data frame of strings to test model
+        model_name (str): One of "LSTM", "multinomial", "GRU", "conv1d", "BERT"
+        params (dict, optional): A dictionary of model-specific parameters Defaults to None.
+
+    Returns:
+        Preprocessed X train (pd.DataFrame) & Preprocessed X test (pd.DataFrame)
+    """
     def LSTM_preprocess(X_train, X_test):
+        """Preprocess train and test X data for basic LSTM model.
+        Must have passed 'preproc_params_LSTM' as params in preproc_test()
+        Args:
+            X_train (pd.DataFrame): Data frame of strings to train model
+            X_test (pd.DataFrame): Data frame of strings to test model
+
+        Returns a tuple:
+            X_train and X_test data frames tokenized, embedded and padded
+        """
         max_length = params["max_length"]
         vector_size= params["vector_size"]
         window= params["window"]
@@ -68,6 +84,21 @@ def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, param
         return X_train_padded, X_test_padded
 
     def Embed_LSTM_preproc(X_train:pd.DataFrame, X_test:pd.DataFrame, params:dict):
+        """Preprocess train and test X data for LSTM model with Glove embedding.
+        Must have passed 'preproc_params_LSTM' as params in preproc_test()
+
+        Args:
+            X_train (pd.DataFrame): Data frame of strings to train model
+            X_test (pd.DataFrame): Data frame of strings to test model
+            params (dict): preproc_params_LSTM
+
+        Returns a tuple:
+            - A list with
+                -X train tokenized, truncated and padded
+                - The word index
+                - Vocab size
+            - X test tokenized, truncated and padded
+        """
         model_name = "Glove"
         tk = Tokenizer()
         tk.fit_on_texts(X_train.text)
@@ -86,8 +117,17 @@ def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, param
         train = []
         train.append([X_train_pad,word_index, vocab_size])
         return train, X_test_pad
-    def Multinomial_preprocess(X_train, X_test):
 
+    def Multinomial_preprocess(X_train, X_test):
+        """Preprocess train and test X dataframes for multinomial model
+
+        Args:
+            X_train (pd.DataFrame): Data frame of strings to train model
+            X_test (pd.DataFrame): Data frame of strings to test model
+
+        Returns:
+            X train & X test tokenized (word level) and lemmatized
+        """
         @simple_time_and_memory_tracker
         def tokenize_words(X_train, X_test): #tokenizes text to words
             X_train = X_train.apply(lambda x: word_tokenize(x))
@@ -126,10 +166,32 @@ def preproc_test(X_train:pd.DataFrame,X_test:pd.DataFrame, model_name:str, param
             print("✅ Preprocessing is done")
             return X_train_token, X_test_token
         return preprocessing(X_train, X_test, stop_words=False, sent_tokenize=False, lemmatize=True)
+
     def GRU_preprocess(X_train, X_test):
+        """Preprocess train and test X data for GRU model.
+        Must have passed 'preproc_params_LSTM' as params in preproc_test()
+        Args:
+            X_train (pd.DataFrame): Data frame of strings to train model
+            X_test (pd.DataFrame): Data frame of strings to test model
+
+        Returns a tuple:
+            X_train and X_test data frames tokenized, embedded and padded
+        """
         return LSTM_preprocess(X_train, X_test)
 
     def Conv1d_preprocess(X_train, X_test):
+        """Preprocess train and test X data for Conv1d model.
+        Must have passed 'preproc_params_c1d' as params in preproc_test()
+        Args:
+            X_train (pd.DataFrame): Data frame of strings to train model
+            X_test (pd.DataFrame): Data frame of strings to test model
+
+        Returns:
+            X train (list): Returns the preprocessed X train, the maxlen and
+            the vocab size as output for use in initialize model function
+            X test (list): Returns the preprocessed X test, the maxlen and
+            the vocab size as output for use in initialize model function
+        """
         model_name = "conv1d"
         max_length = params["max_length"]
         @simple_time_and_memory_tracker
